@@ -1,8 +1,9 @@
 ﻿using FezEditor.Components;
 using FezEditor.Services;
+using FezEditor.Tools;
+using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Serilog;
-using Serilog.Core;
 
 namespace FezEditor;
 
@@ -37,10 +38,18 @@ public class FezEditor : Game
 
     protected override void Initialize()
     {
-        Services.AddService(typeof(ImGuiService), _imGuiService = new ImGuiService(this));
+        // Services
+        {
+            this.AddService(_imGuiService = new ImGuiService(this));
+        }
         
-        Components.Add(new TestComponent(this));
+        // Components
+        {
+            this.AddComponent(new TestComponent(this));
+            this.AddComponent(new ContentExtractor(this));
+        }
         
+        ImGuiX.ImGuiService = _imGuiService;
         base.Initialize();
     }
 
@@ -57,8 +66,7 @@ public class FezEditor : Game
 
     protected override void Dispose(bool disposing)
     {
-        _imGuiService?.Dispose();
-        
         base.Dispose(disposing);
+        this.RemoveServices();
     }
 }
