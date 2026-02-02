@@ -1,8 +1,11 @@
 <Project>
-  <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)**\*.*" Exclude="$(MSBuildThisFileDirectory)*.targets">
-      <Link>Content\%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+  <Target Name="BundleContent" AfterTargets="Build">
+    <ItemGroup>
+      <FilesToCopy Include="$(MSBuildThisFileDirectory)**\*.*" Exclude="$(MSBuildThisFileDirectory)*.targets" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(FilesToCopy)"
+          DestinationFiles="@(FilesToCopy->'$(OutputPath)Content\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
 </Project>

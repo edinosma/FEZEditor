@@ -1,20 +1,14 @@
 <Project>
-  <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)x86\**\*.*" Condition="'$(OS)' == 'Windows_NT' AND '$(Platform)' == 'x86'">
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)x64\**\*.*" Condition="'$(OS)' == 'Windows_NT' AND '$(Platform)' == 'x64'">
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)libaarch64\**\*.*" Condition="'$(OS)' != 'Windows_NT' AND '$(Platform)' == 'arm64'" >
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)lib64\**\*.*" Condition="'$(OS)' != 'Windows_NT' AND '$(Platform)' == 'x64'" >
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+  <Target Name="CopyFNALibs" AfterTargets="Build">
+    <ItemGroup>
+      <_FNALibs Include="$(MSBuildThisFileDirectory)x86\**\*.*" Condition="'$(OS)' == 'Windows_NT' AND '$(Platform)' == 'x86'" />
+      <_FNALibs Include="$(MSBuildThisFileDirectory)x64\**\*.*" Condition="'$(OS)' == 'Windows_NT' AND '$(Platform)' == 'x64'" />
+      <_FNALibs Include="$(MSBuildThisFileDirectory)libaarch64\**\*.*" Condition="'$(OS)' != 'Windows_NT' AND '$(Platform)' == 'arm64'" />
+      <_FNALibs Include="$(MSBuildThisFileDirectory)lib64\**\*.*" Condition="'$(OS)' != 'Windows_NT' AND '$(Platform)' == 'x64'" />
+    </ItemGroup>
+    
+    <Copy SourceFiles="@(_FNALibs)"
+          DestinationFiles="@(_FNALibs->'$(OutputPath)%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
 </Project>
