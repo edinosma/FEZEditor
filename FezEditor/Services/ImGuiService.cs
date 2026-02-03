@@ -15,6 +15,8 @@ public partial class ImGuiService
 {
     private static readonly ILogger Logger = Logging.Create<ImGuiService>();
     
+    private static readonly Color ClearColor = new(0.2f, 0.2f, 0.294f);
+    
     private const float FallbackFrameTime = 1f / 60f;
 
     private const float WheelDelta = 120f;
@@ -135,6 +137,7 @@ public partial class ImGuiService
         };
         io.DisplayFramebufferScale = new System.Numerics.Vector2(1, 1);
 
+        _game.GraphicsDevice.Clear(ClearColor);
         ImGui.NewFrame();
     }
 

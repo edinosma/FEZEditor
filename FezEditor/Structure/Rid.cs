@@ -4,12 +4,13 @@
 /// Opaque resource identifier. All server-managed resources are referenced by RID.
 /// A default RID (value 0) is invalid/null.
 /// </summary>
-/// <param name="Id">Value of RID</param>
-public readonly record struct Rid(uint Id)
+/// <param name="Id">Value of RID.</param>
+/// <param name="Type">Type of RID (for debugging purposes).</param>
+public readonly record struct Rid(uint Id, Type Type)
 {
-    public static readonly Rid Invalid = new(0);
+    public static readonly Rid Invalid = new(0, typeof(void));
     
-    public bool Valid => Id > 0;
+    public bool IsValid => Id > 0 && Type != typeof(void);
 
-    public override string ToString() => $"RID({Id})";
+    public override string ToString() => $"RID({Id}, {Type.Name})";
 }

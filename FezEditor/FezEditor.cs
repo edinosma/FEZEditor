@@ -12,8 +12,10 @@ public class FezEditor : Game
     private static readonly ILogger Logger = Logging.Create<FezEditor>();
     
     private readonly GraphicsDeviceManager _deviceManager;
+    
+    private IRenderingService _rendering = null!;
 
-    private ImGuiService? _imGuiService;
+    private ImGuiService _imGui = null!;
     
     [STAThread]
     private static void Main(string[] args)
@@ -48,7 +50,8 @@ public class FezEditor : Game
     {
         // Services
         {
-            this.AddService(_imGuiService = new ImGuiService(this));
+            this.AddService(_rendering = new RenderingService(this));
+            this.AddService(_imGui = new ImGuiService(this));
         }
         
         // Components
@@ -57,19 +60,16 @@ public class FezEditor : Game
             this.AddComponent(new ContentExtractor(this));
         }
         
-        ImGuiX.ImGuiService = _imGuiService;
+        ImGuiX.ImGuiService = _imGui;
         base.Initialize();
     }
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(new Color(0.2f, 0.2f, 0.294f));
-        
-        _imGuiService?.BeforeLayout(gameTime);
-        
+        _rendering.Draw(gameTime);
+        _imGui.BeforeLayout(gameTime);
         base.Draw(gameTime);
-        
-        _imGuiService?.AfterLayout();
+        _imGui.AfterLayout();
     }
 
     protected override void Dispose(bool disposing)

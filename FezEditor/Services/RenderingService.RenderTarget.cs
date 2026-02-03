@@ -1,0 +1,98 @@
+﻿using FezEditor.Structure;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace FezEditor.Services;
+
+public partial class RenderingService
+{
+    private class RenderTargetData
+    {
+        public bool IsBackbuffer;
+        public RenderTarget2D? Target;
+        public Rid World;
+        public Color ClearColor = Color.CornflowerBlue;
+        public int Width;
+        public int Height;
+    }
+    
+    private readonly Dictionary<Rid, RenderTargetData> _renderTargets = new();
+    
+    private readonly Rid _backbufferRid;
+    
+    public Rid RenderTargetCreate()
+    {
+        var rid = AllocateRid(typeof(RenderTargetData));
+        var w = _device.PresentationParameters.BackBufferWidth;
+        var h = _device.PresentationParameters.BackBufferHeight;
+
+        _renderTargets[rid] = new RenderTargetData
+        {
+            Width = w,
+            Height = h,
+            Target = new RenderTarget2D(_device, w, h,
+                false,
+                _device.PresentationParameters.BackBufferFormat,
+                _device.PresentationParameters.DepthStencilFormat)
+        };
+
+        return rid;
+    }
+
+    public Rid RenderTargetGetBackbuffer()
+    {
+        return _backbufferRid;
+    }
+
+    public Texture2D? RenderTargetGetTexture(Rid rt)
+    {
+        var data = GetResource(_renderTargets, rt);
+        return data.IsBackbuffer ? null! : data.Target;
+    }
+
+    public void RenderTargetSetWorld(Rid rt, Rid world)
+    {
+        GetResource(_renderTargets, rt).World = world;
+    }
+
+    public void RenderTargetSetSize(Rid rt, int width, int height)
+    {
+        var data = GetResource(_renderTargets, rt);
+        if (data.IsBackbuffer || (data.Width == width && data.Height == height))
+        {
+            return;
+        }
+
+        data.Width = width;
+        data.Height = height;
+        data.Target?.Dispose();
+        data.Target = new RenderTarget2D(_device, width, height, false,
+            _device.PresentationParameters.BackBufferFormat,
+            _device.PresentationParameters.DepthStencilFormat);
+    }
+
+    public void RenderTargetSetClearColor(Rid rt, Color color)
+    {
+        GetResource(_renderTargets, rt).ClearColor = color;
+    }
+
+    private Rid CreateBackbuffer()
+    {
+        var rid = AllocateRid(typeof(RenderTargetData));
+        _renderTargets[rid] = new RenderTargetData
+        {
+            IsBackbuffer = true,
+            Width = _device.PresentationParameters.BackBufferWidth,
+            Height = _device.PresentationParameters.BackBufferHeight
+        };
+        return rid;
+    }
+
+    private static void DisposeRenderTarget(RenderTargetData rt)
+    {
+        if (!rt.IsBackbuffer)
+        {
+            rt.Target?.Dispose();
+        }
+    }
+}
