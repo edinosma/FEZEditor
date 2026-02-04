@@ -4,11 +4,13 @@ using FEZRepacker.Core.Conversion;
 using FEZRepacker.Core.FileSystem;
 using FEZRepacker.Core.XNB;
 using ImGuiNET;
+using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Serilog;
 
 namespace FezEditor.Components;
 
+[UsedImplicitly]
 public class ContentExtractor : DrawableGameComponent
 {
     private static readonly ILogger Logger = Logging.Create<ContentExtractor>();

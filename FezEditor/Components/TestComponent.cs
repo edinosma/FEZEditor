@@ -2,11 +2,13 @@
 using FezEditor.Structure;
 using FezEditor.Tools;
 using ImGuiNET;
+using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace FezEditor.Components;
 
+[UsedImplicitly]
 public class TestComponent : DrawableGameComponent
 {
     private readonly IRenderingService _rs;
@@ -25,11 +27,11 @@ public class TestComponent : DrawableGameComponent
 
     private float _elapsed;
     
-    public TestComponent(Game game) : base(game)
+    public TestComponent(Game game, IRenderingService renderingService) : base(game)
     {
         Enabled = true;
         DrawOrder = 10001;
-        _rs = game.GetService<IRenderingService>();
+        _rs = renderingService;
     }
 
     public override void Initialize()

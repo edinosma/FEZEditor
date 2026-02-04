@@ -48,17 +48,11 @@ public class FezEditor : Game
 
     protected override void Initialize()
     {
-        // Services
-        {
-            this.AddService(_rendering = new RenderingService(this));
-            this.AddService(_imGui = new ImGuiService(this));
-        }
+        _imGui = this.CreateService<IImGuiService, ImGuiService>();
+        _rendering = this.CreateService<IRenderingService, RenderingService>();
         
-        // Components
-        {
-            this.AddComponent(new TestComponent(this));
-            this.AddComponent(new ContentExtractor(this));
-        }
+        this.CreateComponent<TestComponent>();
+        this.CreateComponent<ContentExtractor>();
         
         base.Initialize();
     }
