@@ -1,6 +1,6 @@
-﻿using FezEditor.Services;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+
 using NVector2 = System.Numerics.Vector2;
 using NVector3 = System.Numerics.Vector3;
 using NVector4 = System.Numerics.Vector4;
@@ -12,16 +12,11 @@ public static class ImGuiX
 {
     #region Texture Bindings
     
-    public static ImGuiService ImGuiService { private get; set; }
-    
-    public static IntPtr Bind(Texture2D texture) 
-        => ImGuiService.BindTexture(texture);
-    
-    public static bool Unbind(Texture2D texture)
-        => ImGuiService.UnbindTexture(texture);
+    public static Func<Texture2D, IntPtr> Bind { get; set; } = null!;
 
-    public static Texture2D? GetTexture(IntPtr ptr)
-        => ImGuiService.GetBoundTexture(ptr);
+    public static Func<Texture2D, bool> Unbind { get; set; } = null!;
+
+    public static Func<IntPtr, Texture2D?> GetTexture { get; set; } = null!;
     
     #endregion
     

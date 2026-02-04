@@ -11,7 +11,7 @@ namespace FezEditor.Services;
 /// <summary>
 /// Renders Dear ImGui user interfaces by integrating ImGui.NET with the FNA graphics pipeline.
 /// </summary>
-public partial class ImGuiService
+public partial class ImGuiService : IImGuiService
 {
     private static readonly ILogger Logger = Logging.Create<ImGuiService>();
     
@@ -54,6 +54,9 @@ public partial class ImGuiService
             SetupStyle();
             PopulateKeyMappings();
             TextInputEXT.TextInput += HandleInput;
+            ImGuiX.Bind = BindTexture;
+            ImGuiX.Unbind = UnbindTexture;
+            ImGuiX.GetTexture = GetBoundTexture;
         }
 
         // Rebuild Font atlas
@@ -311,6 +314,7 @@ public partial class ImGuiService
     /// </summary>
     public void Dispose()
     {
+        GC.SuppressFinalize(this);
         if (UnbindTexture(_fontTexture))
         {
             _fontTexture.Dispose();

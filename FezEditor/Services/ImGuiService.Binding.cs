@@ -19,7 +19,7 @@ public partial class ImGuiService
     /// </summary>
     /// <param name="texture">The texture to bind.</param>
     /// <returns>A pointer handle to the texture, or IntPtr.Zero if the texture is null or disposed.</returns>
-    public static IntPtr BindTexture(Texture2D texture)
+    private static IntPtr BindTexture(Texture2D texture)
     {
         if (texture.IsDisposed)
         {
@@ -49,7 +49,7 @@ public partial class ImGuiService
     /// </summary>
     /// <param name="texture">The texture to unbind.</param>
     /// <returns>True if the texture was found and unbound, false otherwise.</returns>
-    public static bool UnbindTexture(Texture2D texture)
+    private static bool UnbindTexture(Texture2D texture)
     {
         if (!LookupReverse.Remove(texture, out var ptr))
         {
@@ -65,7 +65,7 @@ public partial class ImGuiService
     /// </summary>
     /// <param name="ptr">The pointer handle to look up.</param>
     /// <returns>The associated Texture2D, or null if not found or if the texture has been disposed.</returns>
-    public static Texture2D? GetBoundTexture(IntPtr ptr)
+    private static Texture2D? GetBoundTexture(IntPtr ptr)
     {
         if (!Lookup.TryGetValue(ptr, out var weakRef))
         {

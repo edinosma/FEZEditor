@@ -15,7 +15,7 @@ public class FezEditor : Game
     
     private IRenderingService _rendering = null!;
 
-    private ImGuiService _imGui = null!;
+    private IImGuiService _imGui = null!;
     
     [STAThread]
     private static void Main(string[] args)
@@ -60,7 +60,6 @@ public class FezEditor : Game
             this.AddComponent(new ContentExtractor(this));
         }
         
-        ImGuiX.ImGuiService = _imGui;
         base.Initialize();
     }
 
