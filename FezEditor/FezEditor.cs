@@ -53,6 +53,7 @@ public class FezEditor : Game
         this.CreateComponent<TestComponent>();
         this.CreateComponent<MenuBar>();
         this.CreateComponent<FileBrowser>();
+        this.CreateComponent<WelcomeScreen>();
         
         base.Initialize();
     }

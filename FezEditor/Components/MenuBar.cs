@@ -1,4 +1,5 @@
-﻿using FezEditor.Tools;
+﻿using FezEditor.Services;
+using FezEditor.Tools;
 using ImGuiNET;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
@@ -12,8 +13,12 @@ public class MenuBar : DrawableGameComponent
     private Texture2D _logoTexture = null!;
 
     private AboutWindow? _aboutWindow;
+    
+    private ModalWindow? _quitWindow;
 
-    public MenuBar(Game game) : base(game) { }
+    public MenuBar(Game game) : base(game)
+    {
+    }
 
     protected override void LoadContent()
     {
@@ -24,20 +29,87 @@ public class MenuBar : DrawableGameComponent
     {
         if (ImGui.BeginMainMenuBar())
         {
+            if (ImGui.BeginMenu("File"))
+            {
+                ImGui.Separator();
+
+                if (ImGui.MenuItem("Save File"))
+                {
+                    // TODO: saving single modified file
+                }
+                
+                if (ImGui.MenuItem("Save File As..."))
+                {
+                    // TODO: saving single modified file to different location
+                }
+                
+                if (ImGui.MenuItem("Save All Files"))
+                {
+                    // TODO: saving all modified files
+                }
+                
+                ImGui.Separator();
+                
+                if (ImGui.MenuItem("Undo"))
+                {
+                    // TODO: History undo
+                }
+                
+                if (ImGui.MenuItem("Redo"))
+                {
+                    // TODO: History redo
+                }
+                
+                ImGui.Separator();
+                
+                if (ImGui.MenuItem("Close File"))
+                {
+                    // TODO: Closing currently opened file
+                }
+                
+                if (ImGui.MenuItem("Quit"))
+                {
+                    ShowAreYouSure();
+                }
+
+                ImGui.EndMenu();
+            }
+
             if (ImGui.BeginMenu("Help"))
             {
                 ImGuiX.Image(_logoTexture, new Vector2(16, 16));
                 ImGui.SameLine();
-                if (ImGui.MenuItem("About FEZEditor...") && _aboutWindow == null)
+                if (ImGui.MenuItem("About FEZEditor..."))
                 {
-                    _aboutWindow = Game.CreateComponent<AboutWindow>();
-                    _aboutWindow.Disposed += (_, _) => { _aboutWindow = null; };
+                    ShowAboutWindow();
                 }
 
                 ImGui.EndMenu();
             }
 
             ImGui.EndMainMenuBar();
+        }
+    }
+
+    private void ShowAboutWindow()
+    {
+        if (_aboutWindow == null)
+        {
+            _aboutWindow = Game.CreateComponent<AboutWindow>();
+            _aboutWindow.Disposed += (_, _) => { _aboutWindow = null; };
+        }
+    }
+
+    private void ShowAreYouSure()
+    {
+        if (_quitWindow == null)
+        {
+            _quitWindow = Game.CreateComponent<ModalWindow>();
+            _quitWindow.ShowConfirm(title: "Quitting FezEditor...",
+                message: "Are you sure?",
+                onYes: () => Game.Exit(),
+                onNo: null);
+            _quitWindow.Disposed += (_, _) => { _quitWindow = null; };
         }
     }
 }

@@ -38,7 +38,7 @@ public class AboutWindow : DrawableGameComponent
         var center = ImGui.GetMainViewport().GetCenter().ToXna();
         ImGuiX.SetNextWindowPos(center, ImGuiCond.Appearing, Vector2.One / 2);
 
-        if (ImGui.Begin("About FEZEditor", ref _open,
+        if (ImGui.Begin(nameof(AboutWindow), ref _open,
                 ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoTitleBar |
                 ImGuiWindowFlags.NoMove))
         {
