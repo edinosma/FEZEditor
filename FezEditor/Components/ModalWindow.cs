@@ -8,13 +8,6 @@ namespace FezEditor.Components;
 [UsedImplicitly]
 public class ModalWindow : DrawableGameComponent
 {
-    private enum State
-    {
-        YesNo,
-        Ok,
-        Disposed
-    }
-
     private string _title = "";
 
     private string _message = "";
@@ -24,6 +17,8 @@ public class ModalWindow : DrawableGameComponent
     private Action? _onNo;
 
     private State _state;
+
+    private bool _showPopup;
 
     public ModalWindow(Game game) : base(game)
     {
@@ -37,6 +32,7 @@ public class ModalWindow : DrawableGameComponent
         _onYes = null;
         _onNo = null;
         _state = State.Ok;
+        _showPopup = true;
         Enabled = true;
     }
 
@@ -47,6 +43,7 @@ public class ModalWindow : DrawableGameComponent
         _onYes = onYes;
         _onNo = onNo;
         _state = State.YesNo;
+        _showPopup = true;
         Enabled = true;
     }
 
@@ -60,13 +57,14 @@ public class ModalWindow : DrawableGameComponent
 
     public override void Draw(GameTime gameTime)
     {
-        ImGui.OpenPopup(_title);
-        var center = ImGui.GetMainViewport().GetCenter().ToXna();
-        ImGuiX.SetNextWindowPos(center, ImGuiCond.Appearing, Vector2.One / 2f);
+        if (_showPopup)
+        {
+            ImGuiX.SetNextWindowCentered();
+            ImGui.OpenPopup(_title);
+            _showPopup = false;
+        }
 
-        var open = true;
-        if (ImGui.BeginPopupModal(_title, ref open,
-                ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove))
+        if (ImGui.BeginPopupModal(_title,ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove))
         {
             ImGui.TextWrapped(_message);
             ImGui.Spacing();
@@ -115,5 +113,12 @@ public class ModalWindow : DrawableGameComponent
         }
 
         ImGui.EndPopup();
+    }
+    
+    private enum State
+    {
+        YesNo,
+        Ok,
+        Disposed
     }
 }

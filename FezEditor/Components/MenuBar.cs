@@ -14,10 +14,11 @@ public class MenuBar : DrawableGameComponent
 
     private AboutWindow? _aboutWindow;
     
-    private ModalWindow? _quitWindow;
+    private readonly IStateService _stateService;
 
-    public MenuBar(Game game) : base(game)
+    public MenuBar(Game game, IStateService stateService) : base(game)
     {
+        _stateService = stateService;
     }
 
     protected override void LoadContent()
@@ -29,7 +30,7 @@ public class MenuBar : DrawableGameComponent
     {
         if (ImGui.BeginMainMenuBar())
         {
-            if (ImGui.BeginMenu("File"))
+            if (ImGui.BeginMenu("File", _stateService.CurrentState >= IStateService.State.ResourcesLoaded))
             {
                 ImGui.Separator();
 
@@ -69,13 +70,13 @@ public class MenuBar : DrawableGameComponent
                 
                 if (ImGui.MenuItem("Quit"))
                 {
-                    ShowAreYouSure();
+                    _stateService.Quit();
                 }
 
                 ImGui.EndMenu();
             }
 
-            if (ImGui.BeginMenu("Help"))
+            if (ImGui.BeginMenu("Help", _stateService.CurrentState != IStateService.State.ResourcesExtracting))
             {
                 ImGuiX.Image(_logoTexture, new Vector2(16, 16));
                 ImGui.SameLine();
@@ -97,19 +98,6 @@ public class MenuBar : DrawableGameComponent
         {
             _aboutWindow = Game.CreateComponent<AboutWindow>();
             _aboutWindow.Disposed += (_, _) => { _aboutWindow = null; };
-        }
-    }
-
-    private void ShowAreYouSure()
-    {
-        if (_quitWindow == null)
-        {
-            _quitWindow = Game.CreateComponent<ModalWindow>();
-            _quitWindow.ShowConfirm(title: "Quitting FezEditor...",
-                message: "Are you sure?",
-                onYes: () => Game.Exit(),
-                onNo: null);
-            _quitWindow.Disposed += (_, _) => { _quitWindow = null; };
         }
     }
 }

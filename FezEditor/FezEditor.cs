@@ -49,7 +49,9 @@ public class FezEditor : Game
     {
         _imGui = this.CreateService<IImGuiService, ImGuiService>();
         _rendering = this.CreateService<IRenderingService, RenderingService>();
-        
+        this.CreateService<IStateService, StateService>();
+
+        this.CreateComponent<MenuBar>();
         this.CreateComponent<WelcomeScreen>();
         
         base.Initialize();

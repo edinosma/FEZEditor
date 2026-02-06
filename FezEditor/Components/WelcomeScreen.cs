@@ -15,9 +15,12 @@ public class WelcomeScreen : DrawableGameComponent
     private bool _open = true;
 
     private ResourceExtractor? _resourceExtractor;
+    
+    private readonly IStateService _stateService;
 
-    public WelcomeScreen(Game game) : base(game)
+    public WelcomeScreen(Game game, IStateService stateService) : base(game)
     {
+        _stateService = stateService;
     }
 
     protected override void LoadContent()
@@ -85,6 +88,11 @@ public class WelcomeScreen : DrawableGameComponent
                         }
                     },
                     selectOptions);
+            }
+
+            if (ImGui.Button("Quit"))
+            {
+                _stateService.Quit();
             }
         }
 
