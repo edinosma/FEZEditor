@@ -2,8 +2,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-using MeshSurface = FezEditor.Services.IRenderingService.MeshSurface;
-
 namespace FezEditor.Services;
 
 public partial class RenderingService
@@ -115,12 +113,12 @@ public partial class RenderingService
     {
         if (surface is { VertexBuffer: not null, IndexBuffer: not null }) 
         {
-            _device.SetVertexBuffer(surface.VertexBuffer);
-            _device.Indices = surface.IndexBuffer;
+            GraphicsDevice.SetVertexBuffer(surface.VertexBuffer);
+            GraphicsDevice.Indices = surface.IndexBuffer;
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                _device.DrawIndexedPrimitives(
+                GraphicsDevice.DrawIndexedPrimitives(
                     primitiveType: surface.PrimitiveType,
                     baseVertex: 0, 
                     minVertexIndex: 0,
@@ -170,7 +168,7 @@ public partial class RenderingService
                     .Select(i => new VertexPositionNormalTexture(surface.Vertices[i], surface.Normals![i], surface.TexCoords![i]))
                     .ToArray();
             
-                entry.VertexBuffer = new VertexBuffer(_device, typeof(VertexPositionNormalTexture), geometry.Length, BufferUsage.WriteOnly);
+                entry.VertexBuffer = new VertexBuffer(GraphicsDevice, typeof(VertexPositionNormalTexture), geometry.Length, BufferUsage.WriteOnly);
                 entry.VertexBuffer.SetData(geometry);
             }
             else if (hasColors)
@@ -179,7 +177,7 @@ public partial class RenderingService
                     .Select(i => new VertexPositionColorTexture(surface.Vertices[i], surface.Colors![i], surface.TexCoords![i]))
                     .ToArray();
             
-                entry.VertexBuffer = new VertexBuffer(_device, typeof(VertexPositionColorTexture), geometry.Length, BufferUsage.WriteOnly);
+                entry.VertexBuffer = new VertexBuffer(GraphicsDevice, typeof(VertexPositionColorTexture), geometry.Length, BufferUsage.WriteOnly);
                 entry.VertexBuffer.SetData(geometry);
             }
             else
@@ -188,7 +186,7 @@ public partial class RenderingService
                     .Select(i => new VertexPositionTexture(surface.Vertices[i], surface.TexCoords![i]))
                     .ToArray();
 
-                entry.VertexBuffer = new VertexBuffer(_device, typeof(VertexPositionTexture), geometry.Length, BufferUsage.WriteOnly);
+                entry.VertexBuffer = new VertexBuffer(GraphicsDevice, typeof(VertexPositionTexture), geometry.Length, BufferUsage.WriteOnly);
                 entry.VertexBuffer.SetData(geometry);
             }
         }
@@ -198,11 +196,11 @@ public partial class RenderingService
                 .Select(i => new VertexPositionColor(surface.Vertices[i], hasColors ? surface.Colors![i] : Color.White))
                 .ToArray();
 
-            entry.VertexBuffer = new VertexBuffer(_device, typeof(VertexPositionColor), geometry.Length, BufferUsage.WriteOnly);
+            entry.VertexBuffer = new VertexBuffer(GraphicsDevice, typeof(VertexPositionColor), geometry.Length, BufferUsage.WriteOnly);
             entry.VertexBuffer.SetData(geometry);
         }
         
-        entry.IndexBuffer = new IndexBuffer(_device, IndexElementSize.ThirtyTwoBits, surface.Indices.Length, BufferUsage.WriteOnly);
+        entry.IndexBuffer = new IndexBuffer(GraphicsDevice, IndexElementSize.ThirtyTwoBits, surface.Indices.Length, BufferUsage.WriteOnly);
         entry.IndexBuffer.SetData(surface.Indices);
     }
     

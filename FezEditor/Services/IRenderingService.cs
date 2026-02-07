@@ -4,58 +4,11 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace FezEditor.Services;
 
-public interface IRenderingService : IDisposable
+public partial interface IRenderingService : IDisposable
 {
-    enum InstanceType
-    {
-        None,
-        Mesh,
-        MultiMesh
-    }
-
-    enum BlendMode
-    {
-        Opaque,
-        AlphaBlend,
-        Additive,
-        Multiply,
-        Multiply2X,
-        Screen,
-        Maximum,
-        Minimum,
-        Subtract,
-        Premultiplied
-    }
-
-    enum CullMode
-    {
-        None,
-        Front,
-        Back
-    }
-
-    enum FogType
-    {
-        None,
-        Exponential2 = 2
-    }
-
-    enum MultiMeshDataType
-    {
-        Vector4,
-        Matrix
-    }
-    
-    class MeshSurface
-    {
-        public required Vector3[] Vertices;
-        public required int[] Indices;
-        public Vector3[]? Normals;
-        public Color[]? Colors;
-        public Vector2[]? TexCoords;
-    }
-
     #region Public
+    
+    GraphicsDevice GraphicsDevice { get; }
 
     void Draw(GameTime gameTime);
 

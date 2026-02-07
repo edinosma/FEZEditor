@@ -1,8 +1,6 @@
 ﻿using FezEditor.Structure;
 using Microsoft.Xna.Framework;
 
-using InstanceType = FezEditor.Services.IRenderingService.InstanceType;
-
 namespace FezEditor.Services;
 
 public partial class RenderingService

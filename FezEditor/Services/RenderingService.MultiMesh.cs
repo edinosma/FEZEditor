@@ -2,8 +2,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-using MultiMeshDataType = FezEditor.Services.IRenderingService.MultiMeshDataType;
-
 namespace FezEditor.Services;
 
 public partial class RenderingService
@@ -94,7 +92,7 @@ public partial class RenderingService
 
         // Allocate instance buffer.
         data.InstanceDeclaration = new VertexDeclaration(offset, elements);
-        data.InstanceBuffer = new DynamicVertexBuffer(_device, data.InstanceDeclaration, instances, BufferUsage.WriteOnly);
+        data.InstanceBuffer = new DynamicVertexBuffer(GraphicsDevice, data.InstanceDeclaration, instances, BufferUsage.WriteOnly);
 
         // Build template GPU buffers from the first surface of the referenced mesh.
         if (TryGetResource(_meshes, data.Mesh, out var mesh) && mesh!.Surfaces.Count != 0)
@@ -202,17 +200,17 @@ public partial class RenderingService
         }
 
         // Bind template geometry + instance buffer.
-        _device.SetVertexBuffers(
+        GraphicsDevice.SetVertexBuffers(
             new VertexBufferBinding(mm.TemplateVertexBuffer, 0, 0),
             new VertexBufferBinding(mm.InstanceBuffer, 0, 1)
         );
-        _device.Indices = mm.TemplateIndexBuffer;
+        GraphicsDevice.Indices = mm.TemplateIndexBuffer;
 
         // Draw instanced.
         foreach (var pass in mat.Effect.CurrentTechnique.Passes)
         {
             pass.Apply();
-            _device.DrawInstancedPrimitives(
+            GraphicsDevice.DrawInstancedPrimitives(
                 primitiveType: mm.TemplatePrimitiveType,
                 baseVertex: 0,
                 minVertexIndex: 0,

@@ -23,17 +23,17 @@ public partial class RenderingService
     public Rid RenderTargetCreate()
     {
         var rid = AllocateRid(typeof(RenderTargetData));
-        var w = _device.PresentationParameters.BackBufferWidth;
-        var h = _device.PresentationParameters.BackBufferHeight;
+        var w = GraphicsDevice.PresentationParameters.BackBufferWidth;
+        var h = GraphicsDevice.PresentationParameters.BackBufferHeight;
 
         _renderTargets[rid] = new RenderTargetData
         {
             Width = w,
             Height = h,
-            Target = new RenderTarget2D(_device, w, h,
+            Target = new RenderTarget2D(GraphicsDevice, w, h,
                 false,
-                _device.PresentationParameters.BackBufferFormat,
-                _device.PresentationParameters.DepthStencilFormat)
+                GraphicsDevice.PresentationParameters.BackBufferFormat,
+                GraphicsDevice.PresentationParameters.DepthStencilFormat)
         };
 
         return rid;
@@ -66,9 +66,9 @@ public partial class RenderingService
         data.Width = width;
         data.Height = height;
         data.Target?.Dispose();
-        data.Target = new RenderTarget2D(_device, width, height, false,
-            _device.PresentationParameters.BackBufferFormat,
-            _device.PresentationParameters.DepthStencilFormat);
+        data.Target = new RenderTarget2D(GraphicsDevice, width, height, false,
+            GraphicsDevice.PresentationParameters.BackBufferFormat,
+            GraphicsDevice.PresentationParameters.DepthStencilFormat);
     }
 
     public void RenderTargetSetClearColor(Rid rt, Color color)
@@ -82,8 +82,8 @@ public partial class RenderingService
         _renderTargets[rid] = new RenderTargetData
         {
             IsBackbuffer = true,
-            Width = _device.PresentationParameters.BackBufferWidth,
-            Height = _device.PresentationParameters.BackBufferHeight
+            Width = GraphicsDevice.PresentationParameters.BackBufferWidth,
+            Height = GraphicsDevice.PresentationParameters.BackBufferHeight
         };
         return rid;
     }

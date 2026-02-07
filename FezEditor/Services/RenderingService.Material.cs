@@ -2,9 +2,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-using BlendMode = FezEditor.Services.IRenderingService.BlendMode;
-using CullMode = FezEditor.Services.IRenderingService.CullMode;
-
 namespace FezEditor.Services;
 
 public partial class RenderingService
@@ -18,7 +15,7 @@ public partial class RenderingService
         public Vector3 Diffuse = Vector3.One;
         public float Opacity = 1.0f;
         public BlendMode BlendMode = BlendMode.Opaque;
-        public CullMode CullMode = CullMode.Back;
+        public CullMode CullMode = CullMode.CullCounterClockwiseFace;
         public ColorWriteChannels ColorWriteChannels = ColorWriteChannels.All;
         public SamplerState? SamplerState;
         public BlendState BlendState = BlendState.Opaque;
@@ -102,18 +99,18 @@ public partial class RenderingService
 
     private void ApplyMaterialState(MaterialData mat)
     {
-        _device.BlendState = mat.BlendState;
-        _device.DepthStencilState = mat.DepthStencilState;
-        _device.RasterizerState = mat.CullMode switch
+        GraphicsDevice.BlendState = mat.BlendState;
+        GraphicsDevice.DepthStencilState = mat.DepthStencilState;
+        GraphicsDevice.RasterizerState = mat.CullMode switch
         {
             CullMode.None => RasterizerState.CullNone,
-            CullMode.Front => RasterizerState.CullClockwise,
+            CullMode.CullClockwiseFace => RasterizerState.CullClockwise,
             _ => RasterizerState.CullCounterClockwise
         };
 
         if (mat.SamplerState != null)
         {
-            _device.SamplerStates[0] = mat.SamplerState;
+            GraphicsDevice.SamplerStates[0] = mat.SamplerState;
         }
     }
 
@@ -250,9 +247,9 @@ public partial class RenderingService
 
     private void RestoreDefaultState()
     {
-        _device.BlendState = BlendState.Opaque;
-        _device.DepthStencilState = DepthStencilState.Default;
-        _device.RasterizerState = RasterizerState.CullCounterClockwise;
+        GraphicsDevice.BlendState = BlendState.Opaque;
+        GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+        GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
     }
 
     private void InvalidateMaterial(Rid material)

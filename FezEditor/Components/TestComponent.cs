@@ -47,11 +47,11 @@ public class TestComponent : EditorComponent
         // Create material
         var effect = new BasicEffect(Game.GraphicsDevice) { VertexColorEnabled = true };
         _material = _rs.MaterialCreate(effect);
-        _rs.MaterialSetCullMode(_material, IRenderingService.CullMode.None);
+        _rs.MaterialSetCullMode(_material, CullMode.None);
         
         // Create mesh with a single triangle surface
         _mesh = _rs.MeshCreate();
-        _rs.MeshAddSurface(_mesh, PrimitiveType.TriangleList, new IRenderingService.MeshSurface
+        _rs.MeshAddSurface(_mesh, PrimitiveType.TriangleList, new MeshSurface
         {
             Vertices = new[]
             {

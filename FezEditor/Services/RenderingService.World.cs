@@ -1,8 +1,6 @@
 ﻿using FezEditor.Structure;
 using Microsoft.Xna.Framework;
 
-using FogType = FezEditor.Services.IRenderingService.FogType;
-
 namespace FezEditor.Services;
 
 public partial class RenderingService

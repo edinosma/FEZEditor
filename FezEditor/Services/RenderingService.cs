@@ -3,22 +3,20 @@ using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-using InstanceType = FezEditor.Services.IRenderingService.InstanceType;
-
 namespace FezEditor.Services;
 
 [UsedImplicitly]
 public partial class RenderingService : IRenderingService
 {
-    private readonly GraphicsDevice _device;
-    
+    public GraphicsDevice GraphicsDevice { get; }
+
     private readonly Queue<Rid> _instanceTraversal = new();
 
     private uint _nextRid = 1;
     
     public RenderingService(Game game)
     {
-        _device = game.GraphicsDevice;
+        GraphicsDevice = game.GraphicsDevice;
         _backbufferRid = CreateBackbuffer();
     }
 
@@ -32,8 +30,8 @@ public partial class RenderingService : IRenderingService
             }
 
             // Bind render target.
-            _device.SetRenderTarget(rt.IsBackbuffer ? null : rt.Target);
-            _device.Clear(rt.ClearColor);
+            GraphicsDevice.SetRenderTarget(rt.IsBackbuffer ? null : rt.Target);
+            GraphicsDevice.Clear(rt.ClearColor);
 
             // Build matrices pack
             var view = Matrix.Identity;
@@ -84,7 +82,7 @@ public partial class RenderingService : IRenderingService
             // Unbind render target.
             if (!rt.IsBackbuffer)
             {
-                _device.SetRenderTarget(null);
+                GraphicsDevice.SetRenderTarget(null);
             }
         }
     }
