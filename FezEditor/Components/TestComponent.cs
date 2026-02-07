@@ -1,17 +1,18 @@
 ﻿using FezEditor.Services;
 using FezEditor.Structure;
-using FezEditor.Tools;
 using ImGuiNET;
-using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace FezEditor.Components;
 
-[UsedImplicitly]
-public class TestComponent : DrawableGameComponent
+public class TestComponent : EditorComponent
 {
+    public override string Title => "Test";
+
     private readonly IRenderingService _rs;
+
+    private Texture2D? _rtTexture;
 
     private Rid _world;
 
@@ -29,8 +30,6 @@ public class TestComponent : DrawableGameComponent
     
     public TestComponent(Game game, IRenderingService renderingService) : base(game)
     {
-        Enabled = true;
-        DrawOrder = 10001;
         _rs = renderingService;
     }
 
@@ -94,30 +93,40 @@ public class TestComponent : DrawableGameComponent
 
     public override void Draw(GameTime gameTime)
     {
-        ImGuiX.SetNextWindowSize(new Vector2(600, 400), ImGuiCond.FirstUseEver);
-        if (ImGui.Begin("TEST"))
-        {
-            var size = ImGuiX.GetContentRegionAvail();
-            var w = (int)size.X;
-            var h = (int)size.Y;
+        var size = ImGuiX.GetContentRegionAvail();
+        var w = (int)size.X;
+        var h = (int)size.Y;
             
-            if (w > 0 && h > 0)
+        if (w > 0 && h > 0)
+        {
+            _rtTexture = _rs.RenderTargetGetTexture(_rt);
+            if (_rtTexture == null || _rtTexture.Width != w || _rtTexture.Height != h)
             {
-                var texture = _rs.RenderTargetGetTexture(_rt);
-                if (texture == null || texture.Width != w || texture.Height != h)
-                {
-                    _rs.RenderTargetSetSize(_rt, w, h);
-                    var aspect = (float)w / h;
-                    _rs.CameraSetProjection(_camera, Matrix.CreateOrthographic(2f * aspect, 2f, 0.1f, 10f));
-                }
+                _rs.RenderTargetSetSize(_rt, w, h);
+                var aspect = (float)w / h;
+                _rs.CameraSetProjection(_camera, Matrix.CreateOrthographic(2f * aspect, 2f, 0.1f, 10f));
+            }
 
-                if (texture is { IsDisposed: false })
-                {
-                    ImGuiX.Image(texture, size);
-                }
+            if (_rtTexture is { IsDisposed: false })
+            {
+                ImGuiX.Image(_rtTexture, size);
             }
         }
+    }
+
+    public override void Dispose()
+    {
+        if (_rtTexture != null)
+        {
+            ImGuiX.Unbind(_rtTexture);
+            _rtTexture.Dispose();
+        }
         
-        ImGui.End();
+        _rs.FreeRid(_instance);
+        _rs.FreeRid(_mesh);
+        _rs.FreeRid(_material);
+        _rs.FreeRid(_camera);
+        _rs.FreeRid(_world);
+        _rs.FreeRid(_rt);
     }
 }

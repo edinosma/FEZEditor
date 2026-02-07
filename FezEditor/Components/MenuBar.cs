@@ -13,13 +13,8 @@ public class MenuBar : DrawableGameComponent
     private Texture2D _logoTexture = null!;
 
     private AboutWindow? _aboutWindow;
-    
-    private readonly IStateService _stateService;
 
-    public MenuBar(Game game, IStateService stateService) : base(game)
-    {
-        _stateService = stateService;
-    }
+    public MenuBar(Game game) : base(game) { }
 
     protected override void LoadContent()
     {
@@ -30,7 +25,7 @@ public class MenuBar : DrawableGameComponent
     {
         if (ImGui.BeginMainMenuBar())
         {
-            if (ImGui.BeginMenu("File", _stateService.CurrentState >= IStateService.State.ResourcesLoaded))
+            if (ImGui.BeginMenu("File"))
             {
                 ImGui.Separator();
 
@@ -70,13 +65,13 @@ public class MenuBar : DrawableGameComponent
                 
                 if (ImGui.MenuItem("Quit"))
                 {
-                    _stateService.Quit();
+                    // TODO: Quiting the editor
                 }
 
                 ImGui.EndMenu();
             }
 
-            if (ImGui.BeginMenu("Help", _stateService.CurrentState != IStateService.State.ResourcesExtracting))
+            if (ImGui.BeginMenu("Help"))
             {
                 ImGuiX.Image(_logoTexture, new Vector2(16, 16));
                 ImGui.SameLine();

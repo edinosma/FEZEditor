@@ -7,11 +7,11 @@ namespace FezEditor.Components;
 [UsedImplicitly]
 public class StatusBar : DrawableGameComponent
 {
-    private readonly IStateService _stateService;
+    private readonly IEditorService _editorService;
 
-    public StatusBar(Game game, IStateService stateService) : base(game)
+    public StatusBar(Game game, IEditorService editorService) : base(game)
     {
-        _stateService = stateService;
+        _editorService = editorService;
     }
 
     public void Draw()

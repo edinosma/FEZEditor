@@ -34,23 +34,7 @@ public static class GameExtensions
     public static T CreateComponent<T>(this Game game) where T : class, IGameComponent
     {
         var component = CreateInstance<T>(game);
-        lock (Lock)
-        {
-            game.Components.Add(component);
-        }
-        return component;
-    }
-
-    public static T CreateComponent<T, TInterface>(this Game game)
-        where T : class, TInterface, IGameComponent
-        where TInterface : class
-    {
-        var component = CreateInstance<T>(game);
-        game.AddService<TInterface>(component);
-        lock (Lock)
-        {
-            game.Components.Add(component);
-        }
+        game.AddComponent(component);
         return component;
     }
 
@@ -210,6 +194,14 @@ public static class GameExtensions
 
     #region Component Management
 
+    private static void AddComponent<T>(this Game game, T component) where T : IGameComponent
+    {
+        lock (Lock)
+        {
+            game.Components.Add(component);
+        }
+    }
+
     public static T GetComponent<T>(this Game game) where T : IGameComponent
     {
         lock (Lock)
@@ -236,22 +228,6 @@ public static class GameExtensions
         lock (Lock)
         {
             game.Components.Remove(component);
-        }
-    }
-
-    public static void RemoveComponent<T>(this Game game) where T : IGameComponent
-    {
-        lock (Lock)
-        {
-            var component = game.Components.OfType<T>().FirstOrDefault();
-            if (component != null)
-            {
-                if (component is IDisposable disposable)
-                {
-                    disposable.Dispose();
-                }
-                game.Components.Remove(component);
-            }
         }
     }
 

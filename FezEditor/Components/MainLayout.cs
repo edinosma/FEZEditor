@@ -1,4 +1,5 @@
-﻿using FezEditor.Tools;
+﻿using FezEditor.Services;
+using FezEditor.Tools;
 using ImGuiNET;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
@@ -10,15 +11,23 @@ public class MainLayout : DrawableGameComponent
 {
     private const float DefaultLeftPaneWidth = 250f;
 
-    private FileBrowser? FileBrowser => Game.TryGetComponent<FileBrowser>();
+    private readonly IEditorService _editorService;
+    
+    private readonly FileBrowser _fileBrowser;
 
-    private WelcomeScreen? WelcomeScreen => Game.TryGetComponent<WelcomeScreen>();
+    private readonly StatusBar _statusBar;
 
-    private StatusBar? StatusBar => Game.TryGetComponent<StatusBar>();
-
-    public MainLayout(Game game) : base(game)
+    public MainLayout(Game game, IEditorService editorService) : base(game)
     {
+        _editorService = editorService;
+        _fileBrowser = Game.TryGetComponent<FileBrowser>()!;
+        _statusBar = Game.TryGetComponent<StatusBar>()!;
         DrawOrder = -1;
+    }
+
+    public override void Update(GameTime gameTime)
+    {
+        _editorService.ActiveEditor?.Update(gameTime);
     }
 
     public override void Draw(GameTime gameTime)
@@ -43,7 +52,7 @@ public class MainLayout : DrawableGameComponent
                 {
                     ImGuiX.BeginChild("LeftPane", new Vector2(DefaultLeftPaneWidth, -statusBarHeight), 
                         ImGuiChildFlags.Border | ImGuiChildFlags.ResizeX);
-                    FileBrowser?.Draw();
+                    _fileBrowser.Draw();
                     ImGui.EndChild();
                     ImGui.SameLine();
                 }
@@ -53,13 +62,21 @@ public class MainLayout : DrawableGameComponent
                     ImGuiX.BeginChild("RightPane", new Vector2(0, -statusBarHeight));
                     if (ImGui.BeginTabBar("##EditorTabs"))
                     {
-                        var welcome = WelcomeScreen;
-                        if (welcome != null && ImGui.BeginTabItem("Welcome"))
+                        foreach (var editor in _editorService.Editors)
                         {
-                            welcome.Draw();
-                            ImGui.EndTabItem();
+                            var isOpen = true;
+                            if (ImGui.BeginTabItem(editor.Title, ref isOpen))
+                            {
+                                _editorService.MarkEditorActive(editor);
+                                editor.Draw(gameTime);
+                                ImGui.EndTabItem();
+                            }
+                            if (!isOpen)
+                            {
+                                _editorService.CloseEditor(editor);
+                                break;
+                            }
                         }
-
                         ImGui.EndTabBar();
                     }
                     ImGui.EndChild();
@@ -68,7 +85,7 @@ public class MainLayout : DrawableGameComponent
 
             // Full width, bottom
             ImGui.Separator();
-            StatusBar?.Draw();
+            _statusBar.Draw();
         }
 
         ImGui.End();
