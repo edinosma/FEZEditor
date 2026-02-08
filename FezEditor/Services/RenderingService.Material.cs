@@ -12,6 +12,7 @@ public partial class RenderingService
     {
         public required Effect Effect;
         public Texture2D? Texture;
+        public Matrix TextureTransform = Matrix.Identity;
         public Vector3 Diffuse = Vector3.One;
         public float Opacity = 1.0f;
         public BlendMode BlendMode = BlendMode.Opaque;
@@ -38,6 +39,11 @@ public partial class RenderingService
     {
         GetResource(_materials, material).Texture = texture;
     }
+    
+    public void MaterialSetTextureTransform(Rid material, Matrix transform)
+    {
+        GetResource(_materials, material).TextureTransform = transform;
+    }
 
     public void MaterialSetDiffuse(Rid material, Vector3 color)
     {
@@ -47,6 +53,11 @@ public partial class RenderingService
     public void MaterialSetOpacity(Rid material, float opacity)
     {
         GetResource(_materials, material).Opacity = opacity;
+    }
+
+    public Matrix MaterialGetTextureTransform(Rid material)
+    {
+        return GetResource(_materials, material).TextureTransform;
     }
 
     public Vector3 MaterialGetDiffuse(Rid material)

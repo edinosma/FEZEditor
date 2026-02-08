@@ -129,10 +129,14 @@ public partial interface IRenderingService : IDisposable
     Rid MaterialCreate(Effect effect);
 
     void MaterialAssignBaseTexture(Rid material, Texture2D texture);
+    
+    void MaterialSetTextureTransform(Rid material, Matrix transform);
 
     void MaterialSetDiffuse(Rid material, Vector3 color);
 
     void MaterialSetOpacity(Rid material, float opacity);
+    
+    Matrix MaterialGetTextureTransform(Rid material);
 
     Vector3 MaterialGetDiffuse(Rid material);
 

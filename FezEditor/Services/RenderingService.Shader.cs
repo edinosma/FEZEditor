@@ -112,6 +112,7 @@ public partial class RenderingService
         parameters.GetParameterBySemantic("Matrices_WorldInverseTranspose")?.SetValue(worldInverseTranspose);
         parameters.GetParameterBySemantic("Matrices_World")?.SetValue(matrices.World);
         parameters.GetParameterBySemantic("Matrices_ViewProjection")?.SetValue(matrices.ViewProjection);
+        parameters.GetParameterBySemantic("Matrices_Texture")?.SetValue(material.TextureTransform);
 
         // Material
         parameters.GetParameterBySemantic("Material_Diffuse")?.SetValue(material.Diffuse);
