@@ -19,13 +19,13 @@ public class CameraHost : Host
     
     public ProjectionType Projection { get; set; } = ProjectionType.Perspective;
 
-    public float FieldOfView { get; private set; } = 75.0f;
+    public float FieldOfView { get; set; } = 75.0f;
 
-    public float Size { get; private set; } = 1.0f;
+    public float Size { get; set; } = 1.0f;
 
-    public float Near { get; private set; } = 0.05f;
+    public float Near { get; set; } = 0.05f;
     
-    public float Far { get; private set; } = 1000.0f;
+    public float Far { get; set; } = 1000.0f;
 
     public float AspectRatio { get; set; } = 1.0f;
 
@@ -42,7 +42,7 @@ public class CameraHost : Host
     public override void Update(GameTime gameTime)
     {
         var rotationMatrix = Matrix.CreateFromQuaternion(Rotation);
-        var target = Position + rotationMatrix.Forward;
+        var target = Position - rotationMatrix.Forward;
         var viewMatrix = Matrix.CreateLookAt(Position, target, rotationMatrix.Up);
         RenderingService.CameraSetView(Rid, viewMatrix);
 
@@ -59,32 +59,15 @@ public class CameraHost : Host
                 break;
                 
             case ProjectionType.Orthographic:
-                var halfWidth = Size * AspectRatio * 0.5f;
-                var halfHeight = Size * 0.5f;
-                projectionMatrix = Matrix.CreateOrthographicOffCenter(
-                    -halfWidth, halfWidth,
-                    -halfHeight, halfHeight,
-                    Near, Far
+                projectionMatrix = Matrix.CreateOrthographic(
+                    AspectRatio * Size,
+                    Size,
+                    Near,
+                    Far
                 );
                 break;
         }
         RenderingService.CameraSetProjection(Rid, projectionMatrix);
-    }
-
-    public void SetOrthographic(float size, float near, float far)
-    {
-        Projection = ProjectionType.Orthographic;
-        Size = size;
-        Near = near;
-        Far = far;
-    }
-
-    public void SetPerspective(float fov, float near, float far)
-    {
-        Projection = ProjectionType.Perspective;
-        FieldOfView = fov;
-        Near = near;
-        Far = far;
     }
 
     public Vector3 ProjectPosition(Vector2 screenPosition)
