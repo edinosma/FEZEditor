@@ -126,7 +126,7 @@ public partial interface IRenderingService : IDisposable
 
     #region Material
 
-    Rid MaterialCreate(Effect effect);
+    Rid MaterialCreate(Effect? effect = null);
 
     void MaterialAssignBaseTexture(Rid material, Texture2D texture);
     

@@ -15,11 +15,11 @@ public partial class RenderingService
         public Matrix TextureTransform = Matrix.Identity;
         public Vector3 Diffuse = Vector3.One;
         public float Opacity = 1.0f;
-        public BlendMode BlendMode = BlendMode.Opaque;
+        public BlendMode BlendMode = BlendMode.AlphaBlend;
         public CullMode CullMode = CullMode.CullCounterClockwiseFace;
         public ColorWriteChannels ColorWriteChannels = ColorWriteChannels.All;
-        public SamplerState? SamplerState;
-        public BlendState BlendState = BlendState.Opaque;
+        public SamplerState? SamplerState = SamplerState.PointClamp;
+        public BlendState BlendState = ResolveBlendState(BlendMode.AlphaBlend, ColorWriteChannels.All);
         public readonly DepthStencilState DepthStencilState = new()
         {
             DepthBufferEnable = true, DepthBufferWriteEnable = true
@@ -28,10 +28,10 @@ public partial class RenderingService
     
     private readonly Dictionary<Rid, MaterialData> _materials = new();
     
-    public Rid MaterialCreate(Effect effect)
+    public Rid MaterialCreate(Effect? effect = null)
     {
         var rid = AllocateRid(typeof(MaterialData));
-        _materials[rid] = new MaterialData { Effect = effect };
+        _materials[rid] = new MaterialData { Effect = effect ?? new BasicEffect(GraphicsDevice) };
         return rid;
     }
 
@@ -110,6 +110,7 @@ public partial class RenderingService
 
     private void ApplyMaterialState(MaterialData mat)
     {
+        GraphicsDevice.SamplerStates[0] = mat.SamplerState;
         GraphicsDevice.BlendState = mat.BlendState;
         GraphicsDevice.DepthStencilState = mat.DepthStencilState;
         GraphicsDevice.RasterizerState = mat.CullMode switch
@@ -118,11 +119,6 @@ public partial class RenderingService
             CullMode.CullClockwiseFace => RasterizerState.CullClockwise,
             _ => RasterizerState.CullCounterClockwise
         };
-
-        if (mat.SamplerState != null)
-        {
-            GraphicsDevice.SamplerStates[0] = mat.SamplerState;
-        }
     }
 
     private static BlendState ResolveBlendState(BlendMode mode, ColorWriteChannels colorWriteChannels)
