@@ -2,7 +2,7 @@
 
 public enum GridPlane
 {
-    Xz,
-    Xy,
-    Yz
+    X,
+    Y,
+    Z
 }

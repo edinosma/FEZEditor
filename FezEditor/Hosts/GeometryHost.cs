@@ -11,6 +11,8 @@ public class GeometryHost : Host
     public CameraHost Camera { get; }
     
     public ArtObjectHost ArtObject { get; }
+    
+    public GridHost Grid { get; }
 
     private readonly FirstPersonControl _firstPersonControl;
     
@@ -34,6 +36,11 @@ public class GeometryHost : Host
         };
         RenderingService.WorldSetCamera(Rid, Camera.Rid);
 
+        // Enable fog for grid fade-out
+        RenderingService.WorldSetFogType(Rid, FogType.Exponential2);
+        RenderingService.WorldSetFogColor(Rid, Color.Black);
+        RenderingService.WorldSetFogDensity(Rid, 0.015f);
+
         _firstPersonControl = new FirstPersonControl(Game)
         {
             Camera = Camera
@@ -41,6 +48,9 @@ public class GeometryHost : Host
 
         ArtObject = new ArtObjectHost(Game);
         RenderingService.InstanceSetParent(ArtObject.Rid, _root);
+
+        Grid = new GridHost(Game);
+        RenderingService.InstanceSetParent(Grid.Rid, _root);
     }
     
     ~GeometryHost()
@@ -57,6 +67,7 @@ public class GeometryHost : Host
     {
         _firstPersonControl.Update(gameTime);
         ArtObject.Update(gameTime);
+        Grid.Update(gameTime);
     }
     
     public void SetViewportSize(int width, int height)
