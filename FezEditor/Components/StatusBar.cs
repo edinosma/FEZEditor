@@ -1,17 +1,16 @@
 ﻿using FezEditor.Services;
-using JetBrains.Annotations;
+using FezEditor.Tools;
 using Microsoft.Xna.Framework;
 
 namespace FezEditor.Components;
 
-[UsedImplicitly]
 public class StatusBar : DrawableGameComponent
 {
     private readonly IEditorService _editorService;
 
-    public StatusBar(Game game, IEditorService editorService) : base(game)
+    public StatusBar(Game game) : base(game)
     {
-        _editorService = editorService;
+        _editorService = game.GetService<IEditorService>();
     }
 
     public void Draw()

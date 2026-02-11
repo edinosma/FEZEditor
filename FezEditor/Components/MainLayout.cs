@@ -1,12 +1,10 @@
 ﻿using FezEditor.Services;
 using FezEditor.Tools;
 using ImGuiNET;
-using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 
 namespace FezEditor.Components;
 
-[UsedImplicitly]
 public class MainLayout : DrawableGameComponent
 {
     private const float DefaultLeftPaneWidth = 250f;
@@ -17,11 +15,11 @@ public class MainLayout : DrawableGameComponent
 
     private readonly StatusBar _statusBar;
 
-    public MainLayout(Game game, IEditorService editorService) : base(game)
+    public MainLayout(Game game) : base(game)
     {
-        _editorService = editorService;
-        _fileBrowser = Game.TryGetComponent<FileBrowser>()!;
-        _statusBar = Game.TryGetComponent<StatusBar>()!;
+        _editorService = Game.GetService<IEditorService>();
+        _fileBrowser = Game.GetComponent<FileBrowser>();
+        _statusBar = Game.GetComponent<StatusBar>();
         DrawOrder = -1;
     }
 

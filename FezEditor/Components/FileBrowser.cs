@@ -1,13 +1,10 @@
-﻿using System.Security.Cryptography;
-using FezEditor.Services;
+﻿using FezEditor.Services;
 using FezEditor.Tools;
 using ImGuiNET;
-using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 
 namespace FezEditor.Components;
 
-[UsedImplicitly]
 public class FileBrowser : DrawableGameComponent
 {
     private FileNode? _root;
@@ -38,10 +35,10 @@ public class FileBrowser : DrawableGameComponent
         TypeDescending
     }
 
-    public FileBrowser(Game game, IEditorService editorService, IResourceService resourceService) : base(game)
+    public FileBrowser(Game game) : base(game)
     {
-        _editorService = editorService;
-        _resourceService = resourceService;
+        _editorService = game.GetService<IEditorService>();
+        _resourceService = game.GetService<IResourceService>();
         _resourceService.ProviderChanged += UpdateNodeTree;
     }
 

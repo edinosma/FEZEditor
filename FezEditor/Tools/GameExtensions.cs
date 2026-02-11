@@ -29,17 +29,6 @@ public static class GameExtensions
 
     #endregion
 
-    #region Component Creation with DI
-
-    public static T CreateComponent<T>(this Game game) where T : class, IGameComponent
-    {
-        var component = CreateInstance<T>(game);
-        game.AddComponent(component);
-        return component;
-    }
-
-    #endregion
-
     #region Instance Creation
 
     private static T CreateInstance<T>(Game game) where T : class

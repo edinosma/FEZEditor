@@ -2,13 +2,11 @@
 using FezEditor.Structure;
 using FezEditor.Tools;
 using ImGuiNET;
-using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace FezEditor.Components;
 
-[UsedImplicitly]
 public class MenuBar : DrawableGameComponent
 {
     private Texture2D _logoTexture = null!;
@@ -19,10 +17,10 @@ public class MenuBar : DrawableGameComponent
     
     private readonly IResourceService _resourceService;
 
-    public MenuBar(Game game, IEditorService editorService, IResourceService resourceService) : base(game)
+    public MenuBar(Game game) : base(game)
     {
-        _editorService = editorService;
-        _resourceService = resourceService;
+        _editorService = game.GetService<IEditorService>();
+        _resourceService = game.GetService<IResourceService>();
     }
 
     protected override void LoadContent()
@@ -55,7 +53,7 @@ public class MenuBar : DrawableGameComponent
                 
                 ImGui.Separator();
                 
-                if (ImGui.MenuItem("Undo", _editorService.Flags.HasFlag(EditorFlags.Undo)))
+                if (ImGui.MenuItem("Undo", "Ctrl", _editorService.Flags.HasFlag(EditorFlags.Undo)))
                 {
                     _editorService.UndoActiveEditorChanges();
                 }
@@ -110,8 +108,9 @@ public class MenuBar : DrawableGameComponent
     {
         if (_aboutWindow == null)
         {
-            _aboutWindow = Game.CreateComponent<AboutWindow>();
+            _aboutWindow = new AboutWindow(Game);
             _aboutWindow.Disposed += (_, _) => { _aboutWindow = null; };
+            Game.AddComponent(_aboutWindow);
         }
     }
 }
