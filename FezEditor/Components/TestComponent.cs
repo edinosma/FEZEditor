@@ -1,6 +1,4 @@
-﻿using FezEditor.Hosts;
-using FezEditor.Services;
-using FezEditor.Tools;
+﻿using FezEditor.Actors;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 
@@ -8,19 +6,30 @@ namespace FezEditor.Components;
 
 public class TestComponent : EditorComponent
 {
-    private readonly GeometryHost _host;
+    private readonly Scene _test;
     
     public TestComponent(Game game, string title) : base(game, title)
     {
-        var resourceService = game.GetService<IResourceService>();
-        var artObject = resourceService.Load("art objects/big_treeao");
-        _host = new GeometryHost(game);
-        _host.Load(artObject);
+        _test = new Scene(game);
+        {
+            var actor = _test.CreateActor();
+            var camera = actor.AddComponent<Camera>();
+            var transform = actor.GetComponent<Transform>();
+            camera.Projection = Camera.ProjectionType.Orthographic;
+            camera.Size = 4f;
+            transform.Position = new Vector3(0f, 0f, -4f);
+            transform.Rotation = Quaternion.Identity;
+        }
+        {
+            var actor = _test.CreateActor();
+            var mesh = actor.AddComponent<TestMesh>();
+            mesh.Load();
+        }
     }
 
     public override void Update(GameTime gameTime)
     {
-        _host.Update(gameTime);
+        _test.Update(gameTime);
     }
 
     public override void Draw()
@@ -31,11 +40,11 @@ public class TestComponent : EditorComponent
             
         if (w > 0 && h > 0)
         {
-            var texture = _host.GetViewportTexture();
+            var texture = _test.GetViewportTexture();
             if (texture == null || texture.Width != w || texture.Height != h)
             {
-                _host.SetViewportSize(w, h);
-                _host.Camera.AspectRatio = (float)w / h;
+                _test.SetViewportSize(w, h);
+                _test.SetViewportAspectRatio((float)w / h);
             }
 
             if (texture is { IsDisposed: false })
@@ -47,7 +56,7 @@ public class TestComponent : EditorComponent
 
     public override void Dispose()
     {
-        _host.Dispose();
+        _test.Dispose();
         base.Dispose();
     }
 }

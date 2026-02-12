@@ -32,6 +32,11 @@ public partial class RenderingService
         return GetResource(_worlds, world).Root;
     }
 
+    public Rid WorldGetCamera(Rid world)
+    {
+        return GetResource(_worlds, world).Camera;
+    }
+
     public void WorldSetCamera(Rid world, Rid camera)
     {
         GetResource(_worlds, world).Camera = camera;

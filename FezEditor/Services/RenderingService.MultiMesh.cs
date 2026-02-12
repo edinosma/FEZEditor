@@ -106,6 +106,14 @@ public partial class RenderingService
         }
     }
 
+    public void MultiMeshDeallocate(Rid multiMesh)
+    {
+        var data = GetResource(_multiMeshes, multiMesh);
+        data.InstanceBuffer?.Dispose();
+        data.InstanceDeclaration?.Dispose();
+        _multiMeshes[multiMesh] = new MultiMeshData();
+    }
+
     public int MultiMeshGetInstanceCount(Rid multiMesh)
     {
         return GetResource(_multiMeshes, multiMesh).InstanceCount;

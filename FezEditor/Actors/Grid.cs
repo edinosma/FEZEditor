@@ -1,13 +1,13 @@
-﻿using FezEditor.Structure;
+﻿using FezEditor.Services;
+using FezEditor.Structure;
+using FezEditor.Tools;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace FezEditor.Hosts;
+namespace FezEditor.Actors;
 
-public class GridHost : Host
+public class Grid : ActorComponent
 {
-    public sealed override Rid Rid { get; protected set; }
-
     public bool Enabled { get; set; } = true;
 
     public GridPlane Plane { get; set; } = GridPlane.Z;
@@ -24,62 +24,72 @@ public class GridHost : Host
     
     public int SecondaryStep { get; set; } = 1;
 
+    private IRenderingService _rendering = null!;
+    
     private readonly GridPlaneData[] _planes = new GridPlaneData[3];
 
-    private readonly Rid _primaryMaterial;
+    private Rid _primaryMaterial;
     
-    private readonly Rid _secondaryMaterial;
+    private Rid _secondaryMaterial;
 
-    public GridHost(Game game) : base(game)
+    public override void Initialize()
     {
-        Rid = RenderingService.InstanceCreate(Rid.Invalid);
         var effect = Game.Content.Load<Effect>("Effects/Grid");
+        _rendering = Game.GetService<IRenderingService>();
 
-        _primaryMaterial = RenderingService.MaterialCreate(effect.Clone());
-        RenderingService.MaterialSetAlbedo(_primaryMaterial, PrimaryColor);
+        _primaryMaterial = _rendering.MaterialCreate();
+        _rendering.MaterialAssignEffect(_primaryMaterial, effect);
+        _rendering.MaterialSetAlbedo(_primaryMaterial, PrimaryColor);
 
-        _secondaryMaterial = RenderingService.MaterialCreate(effect.Clone());
-        RenderingService.MaterialSetAlbedo(_secondaryMaterial, SecondaryColor);
+        _secondaryMaterial = _rendering.MaterialCreate();
+        _rendering.MaterialAssignEffect(_secondaryMaterial, effect);
+        _rendering.MaterialSetAlbedo(_secondaryMaterial, SecondaryColor);
         
         for (var i = 0; i < 3; i++)
         {
-            var mesh = RenderingService.MeshCreate();
-            var instance = RenderingService.InstanceCreate(Rid);
-            RenderingService.InstanceSetMesh(instance, mesh);
+            var mesh = _rendering.MeshCreate();
+            var instance = _rendering.InstanceCreate(Actor.InstanceRid);
+            _rendering.InstanceSetMesh(instance, mesh);
             _planes[i] = new GridPlaneData(instance, mesh);
         }
         
-        RenderingService.InstanceSetRotation(_planes[1].Instance, Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.PiOver2));
-        RenderingService.InstanceSetRotation(_planes[2].Instance, Quaternion.CreateFromAxisAngle(Vector3.UnitZ, MathHelper.PiOver2));
+        _rendering.InstanceSetRotation(_planes[1].Instance, Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.PiOver2));
+        _rendering.InstanceSetRotation(_planes[2].Instance, Quaternion.CreateFromAxisAngle(Vector3.UnitZ, MathHelper.PiOver2));
         
         GenerateGridMesh(_planes[0].Mesh, GridPlane.X);
         GenerateGridMesh(_planes[1].Mesh, GridPlane.Y);
         GenerateGridMesh(_planes[2].Mesh, GridPlane.Z);
     }
-
-    ~GridHost()
+    
+    public override void Dispose()
     {
-        Dispose();
+        foreach (var plane in _planes)
+        {
+            _rendering.FreeRid(plane.Instance);
+            _rendering.FreeRid(plane.Mesh);
+        }
+        _rendering.FreeRid(_primaryMaterial);
+        _rendering.FreeRid(_secondaryMaterial);
     }
 
     public override void Update(GameTime gameTime)
     {
         for (var i = 0; i < 3; i++)
         {
-            RenderingService.InstanceSetVisibility(_planes[i].Instance, Enabled && i == (int)Plane);
+            _rendering.InstanceSetVisibility(_planes[i].Instance, Enabled && i == (int)Plane);
         }
     }
 
     private void GenerateGridMesh(Rid meshRid, GridPlane plane)
     {
-        RenderingService.MeshClear(meshRid);
+        _rendering.MeshClear(meshRid);
 
         // Generate two surfaces: primary (bold) and secondary (faint) grid lines
         var primarySurface = CreateGridSurface(plane, PrimarySteps);
-        RenderingService.MeshAddSurface(meshRid, PrimitiveType.LineList, primarySurface, _primaryMaterial);
+        _rendering.MeshAddSurface(meshRid, PrimitiveType.LineList, primarySurface, _primaryMaterial);
 
         var secondarySurface = CreateGridSurface(plane, SecondaryStep);
-        RenderingService.MeshAddSurface(meshRid, PrimitiveType.LineList, secondarySurface, _secondaryMaterial);
+        _rendering.MeshAddSurface(meshRid, PrimitiveType.LineList, secondarySurface, _secondaryMaterial);
     }
 
     private MeshSurface CreateGridSurface(GridPlane plane, int stepInCells)
@@ -170,18 +180,6 @@ public class GridHost : Host
             Indices = indices.ToArray(),
             Colors = colors.ToArray()
         };
-    }
-
-    public override void Dispose()
-    {
-        foreach (var plane in _planes)
-        {
-            RenderingService.FreeRid(plane.Instance);
-            RenderingService.FreeRid(plane.Mesh);
-        }
-        RenderingService.FreeRid(_primaryMaterial);
-        RenderingService.FreeRid(_secondaryMaterial);
-        base.Dispose();
     }
     
     private readonly record struct GridPlaneData(Rid Instance, Rid Mesh);

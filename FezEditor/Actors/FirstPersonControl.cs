@@ -3,56 +3,54 @@ using FezEditor.Structure;
 using FezEditor.Tools;
 using Microsoft.Xna.Framework;
 
-namespace FezEditor.Hosts;
+namespace FezEditor.Actors;
 
-public class FirstPersonControl
+public class FirstPersonControl : ActorComponent
 {
     public float MovementSpeed { get; set; } = 8.0f;
 
     public float MouseSensitivity { get; set; } = 0.002f;
-
-    public CameraHost Camera { get; init; } = null!;
-
+    
     private float _yaw;
 
     private float _pitch;
 
-    private readonly IInputService _inputService;
+    private IInputService _input = null!;
 
-    private readonly Game _game;
+    private Transform _transform = null!;
 
-    public FirstPersonControl(Game game)
+    public override void Initialize()
     {
-        _game = game;
-        _inputService = game.GetService<IInputService>();
+        _input = Game.GetService<IInputService>();
+        _transform = Actor.GetComponent<Transform>();
     }
-
-    public void Update(GameTime gameTime)
+    
+    public override void Update(GameTime gameTime)
     {
         #region Handle mouse input
         
-        _inputService.CaptureMouse(false);
-        if (_inputService.IsRightMousePressed())
+        _input.CaptureMouse(false);
+        if (_input.IsRightMousePressed())
         {
-            var delta = _inputService.GetMouseDelta();
+            var delta = _input.GetMouseDelta();
             _yaw -= delta.X * MouseSensitivity;
             _pitch += delta.Y * MouseSensitivity;
             _pitch = MathHelper.Clamp(_pitch, -MathHelper.PiOver2 + 0.01f, MathHelper.PiOver2 - 0.01f);
-            _inputService.CaptureMouse(true);
+            _input.CaptureMouse(true);
         }
         
         #endregion
         
         #region Handle key input
         
-        var inputDirection = _inputService.GetActionsVector(
+        var inputDirection = _input.GetActionsVector(
             negativeX: InputActions.MoveLeft,
             positiveX: InputActions.MoveRight,
             negativeY: InputActions.MoveBackward,
             positiveY: InputActions.MoveForward
         );
         
-        var rotation = Camera.Rotation;
+        var rotation = _transform.Rotation;
         var forward = Vector3.Transform(Vector3.Forward, rotation);
         var right = Vector3.Transform(Vector3.Right, rotation);
         if (forward.LengthSquared() > 0) forward.Normalize();
@@ -64,7 +62,7 @@ public class FirstPersonControl
         #region Apply movement
 
         var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-        Camera.Position += direction * MovementSpeed * deltaTime;
+        _transform.Position += direction * MovementSpeed * deltaTime;
 
         #endregion
 
@@ -72,10 +70,8 @@ public class FirstPersonControl
 
         var yawQuaternion = Quaternion.CreateFromAxisAngle(Vector3.Up, _yaw);
         var pitchQuaternion = Quaternion.CreateFromAxisAngle(Vector3.Right, _pitch);
-        Camera.Rotation = yawQuaternion * pitchQuaternion;
+        _transform.Rotation = yawQuaternion * pitchQuaternion;
 
         #endregion
-
-        Camera.Update(gameTime);
     }
 }

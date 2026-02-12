@@ -30,8 +30,19 @@ public partial class RenderingService
     public Rid MaterialCreate(Effect? effect = null)
     {
         var rid = AllocateRid(typeof(MaterialData));
-        _materials[rid] = new MaterialData { Effect = effect ?? new BasicEffect(GraphicsDevice) };
+        _materials[rid] = new MaterialData { Effect = new BasicEffect(GraphicsDevice) };
         return rid;
+    }
+
+    public void MaterialReset(Rid material)
+    {
+        GetResource(_materials, material);  // Validation step
+        _materials[material] = new MaterialData { Effect = new BasicEffect(GraphicsDevice) };
+    }
+
+    public void MaterialAssignEffect(Rid material, Effect effect)
+    {
+        GetResource(_materials, material).Effect = effect.Clone();
     }
 
     public void MaterialAssignBaseTexture(Rid material, Texture2D texture)

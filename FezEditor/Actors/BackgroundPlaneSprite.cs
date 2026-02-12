@@ -1,29 +1,19 @@
-﻿using FezEditor.Structure;
+﻿using FezEditor.Services;
+using FezEditor.Structure;
 using FezEditor.Tools;
 using FEZRepacker.Core.Definitions.Game.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+//
 using RAnimatedTexture = FEZRepacker.Core.Definitions.Game.Graphics.AnimatedTexture;
 using RTexture2D = FEZRepacker.Core.Definitions.Game.XNA.Texture2D;
 
-namespace FezEditor.Hosts;
+namespace FezEditor.Actors;
 
-public class BackgroundPlaneHost : Host
+public class BackgroundPlaneSprite : ActorComponent
 {
-    public sealed override Rid Rid { get; protected set; }
-
-    public Rid CameraRid { private get; set; }
-
-    public Vector3 Position { get; set; } = Vector3.Zero;
-
-    public Quaternion Rotation { get; set; } = Quaternion.Identity;
-
-    public Vector3 Scale { get; set; } = Vector3.One;
-
-    public Vector3 Size { get; set; } = Vector3.One / 16f;
-
-    public BoundingBox Bounds { get; set; }
-
+    public Vector3 PlaneSize { get; set; }
+    
     public bool Animated { get; private set; }
 
     public bool Billboard { get; set; } = false;
@@ -34,40 +24,46 @@ public class BackgroundPlaneHost : Host
 
     private readonly List<FrameContent> _frames = new();
 
+    private IRenderingService _rendering = null!;
+
     private Vector2 _textureSize = Vector2.Zero;
-    
+
     private TimeSpan _frameElapsed = TimeSpan.Zero;
-    
+
     private int _frameCounter;
 
     private Rid _mesh;
 
     private Rid _material;
 
-    public BackgroundPlaneHost(Game game) : base(game)
+    private Rid _camera;
+
+    private Transform _transform = null!;
+
+    public override void Initialize()
     {
-        Rid = RenderingService.InstanceCreate(Rid.Invalid);
+        _rendering = Game.GetService<IRenderingService>();
+        _mesh = _rendering.MeshCreate();
+        _material = _rendering.MaterialCreate();
+        var world = _rendering.InstanceGetWorld(Actor.InstanceRid);
+        _camera = _rendering.WorldGetCamera(world);
+        _transform = Actor.GetComponent<Transform>();
     }
 
-    ~BackgroundPlaneHost()
-    {
-        Dispose();
-    }
-
-    public override void Load(object asset)
+    public void Load(object plane)
     {
         Effect effect;
         Texture2D baseTexture;
         List<FrameContent> frames;
 
-        switch (asset)
+        switch (plane)
         {
             case RAnimatedTexture animatedTexture:
             {
                 frames = animatedTexture.Frames;
                 effect = Game.Content.Load<Effect>("Effects/AnimatedPlane");
-                baseTexture = animatedTexture.ToXna(RenderingService.GraphicsDevice);
-                Size = new Vector3(animatedTexture.AtlasWidth / 16f, animatedTexture.AtlasHeight / 16f, 0.125f);
+                baseTexture = animatedTexture.ToXna(_rendering.GraphicsDevice);
+                PlaneSize = new Vector3(animatedTexture.AtlasWidth / 16f, animatedTexture.AtlasHeight / 16f, 0.125f);
                 break;
             }
 
@@ -75,8 +71,8 @@ public class BackgroundPlaneHost : Host
             {
                 frames = new List<FrameContent>();
                 effect = Game.Content.Load<Effect>("StaticPlane");
-                baseTexture = texture.ToXna(RenderingService.GraphicsDevice);
-                Size = new Vector3(texture.Width / 16f, texture.Height / 16f, 0.125f);
+                baseTexture = texture.ToXna(_rendering.GraphicsDevice);
+                PlaneSize = new Vector3(texture.Width / 16f, texture.Height / 16f, 0.125f);
                 break;
             }
 
@@ -90,16 +86,20 @@ public class BackgroundPlaneHost : Host
         _frameCounter = 0;
         _frames.AddRange(frames);
         Animated = _frames.Count > 0;
-
-        _mesh = RenderingService.MeshCreate();
-        RenderingService.InstanceSetMesh(Rid, _mesh);
+        
+        _rendering.InstanceSetMesh(Actor.InstanceRid, _mesh);
         UpdateMeshSurface();
 
-        _material = RenderingService.MaterialCreate(effect);
-        RenderingService.MaterialSetBlendMode(_material, BlendMode.AlphaBlend);
-        RenderingService.MaterialSetDepthWrite(_material, true);
-        RenderingService.MaterialSetDepthTest(_material, CompareFunction.LessEqual);
-        RenderingService.MaterialAssignBaseTexture(_material, baseTexture);
+        _rendering.MaterialAssignEffect(_material, effect);
+        _rendering.MaterialSetBlendMode(_material, BlendMode.AlphaBlend);
+        _rendering.MaterialAssignBaseTexture(_material, baseTexture);
+    }
+
+    public override void Dispose()
+    {
+        _rendering.InstanceSetMesh(Actor.InstanceRid, Rid.Invalid);
+        _rendering.MeshClear(_mesh);
+        _rendering.MaterialReset(_material);
     }
 
     public override void Update(GameTime gameTime)
@@ -114,26 +114,24 @@ public class BackgroundPlaneHost : Host
             else
             {
                 var transform = Mathz.CreateTextureTransform(currentFrame.Rectangle.ToXna(), _textureSize);
-                RenderingService.MaterialSetTextureTransform(_material, transform);
+                _rendering.MaterialSetTextureTransform(_material, transform);
                 _frameCounter = Mathz.Clamp(_frameCounter + 1, 0, _frames.Count - 1);
                 _frameElapsed = TimeSpan.Zero;
             }
-            
-
         }
         
-        RenderingService.MaterialSetAlbedo(_material, Color);
-        RenderingService.MaterialSetCullMode(_material,
+        _rendering.MaterialSetAlbedo(_material, Color);
+        _rendering.MaterialSetCullMode(_material,
             DoubleSided ? CullMode.None : CullMode.CullCounterClockwiseFace);
-
-        var rotation = Rotation;
-        if (Billboard && CameraRid.IsValid)
+        
+        var rotation = _transform.Rotation;
+        if (Billboard && _camera.IsValid)
         {
-            var viewMatrix = RenderingService.CameraGetView(CameraRid);
+            var viewMatrix = _rendering.CameraGetView(_camera);
             var invViewMatrix = Matrix.Invert(viewMatrix);
             var translation = invViewMatrix.Translation;
 
-            var toCamera = (translation - Position) * new Vector3(1, 0, 1);
+            var toCamera = (translation - _transform.Position) * new Vector3(1, 0, 1);
             var angleY = 0f;
             if (toCamera.LengthSquared() > 0.0001f)
             {
@@ -143,19 +141,16 @@ public class BackgroundPlaneHost : Host
 
             rotation = Quaternion.CreateFromAxisAngle(Vector3.Up, angleY);
         }
-
-        Bounds = Mathz.ComputeBoundingBox(Position, Rotation, Scale, Size);
-        RenderingService.InstanceSetPosition(Rid, Position);
-        RenderingService.InstanceSetRotation(Rid, rotation);
-        RenderingService.InstanceSetScale(Rid, Scale);
+        
+        _transform.Rotation = rotation;
         UpdateMeshSurface();
     }
 
     private void UpdateMeshSurface()
     {
-        RenderingService.MeshClear(_mesh);
+        _rendering.MeshClear(_mesh);
 
-        var halfSize = Size * 0.5f;
+        var halfSize = PlaneSize * 0.5f;
         var meshSurface = new MeshSurface
         {
             Vertices = new[]
@@ -197,13 +192,6 @@ public class BackgroundPlaneHost : Host
                 }
         };
 
-        RenderingService.MeshAddSurface(_mesh, PrimitiveType.TriangleList, meshSurface, _material);
-    }
-
-    public override void Dispose()
-    {
-        RenderingService.FreeRid(_mesh);
-        RenderingService.FreeRid(_material);
-        base.Dispose();
+        _rendering.MeshAddSurface(_mesh, PrimitiveType.TriangleList, meshSurface, _material);
     }
 }

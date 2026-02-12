@@ -37,6 +37,8 @@ public interface IRenderingService : IDisposable
     Rid WorldCreate();
 
     Rid WorldGetRoot(Rid world);
+    
+    Rid WorldGetCamera(Rid world);
 
     void WorldSetCamera(Rid world, Rid camera);
 
@@ -126,8 +128,13 @@ public interface IRenderingService : IDisposable
 
     #region Material
 
+    [Obsolete]
     Rid MaterialCreate(Effect? effect = null);
+    
+    void MaterialReset(Rid material);
 
+    void MaterialAssignEffect(Rid material, Effect effect);
+    
     void MaterialAssignBaseTexture(Rid material, Texture2D texture);
     
     void MaterialSetTextureTransform(Rid material, Matrix transform);
@@ -169,6 +176,8 @@ public interface IRenderingService : IDisposable
     Rid MultiMeshGetMesh(Rid multiMesh);
 
     void MultiMeshAllocate(Rid multiMesh, int instances, MultiMeshDataType dataType);
+    
+    void MultiMeshDeallocate(Rid multiMesh);
 
     int MultiMeshGetInstanceCount(Rid multiMesh);
 
