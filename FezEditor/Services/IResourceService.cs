@@ -1,5 +1,4 @@
-﻿using FezEditor.Components;
-using FezEditor.Structure;
+﻿using FezEditor.Structure;
 
 namespace FezEditor.Services;
 
@@ -12,6 +11,4 @@ public interface IResourceService : IDisposable
     void OpenProvider(FileSystemInfo info);
 
     void CloseProvider();
-    
-    EditorComponent CreateEditorFor(string path);
 }

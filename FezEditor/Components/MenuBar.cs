@@ -43,21 +43,24 @@ public class MenuBar : DrawableGameComponent
                 var shortcut = _inputService.GetActionBinding(InputActions.UiSave);
                 if (ImGui.MenuItem("Save File", shortcut, false, enabled))
                 {
-                    // TODO: saving single modified file
+                    _editorService.SaveActiveEditorChanges();
                 }
                 
                 enabled = _editorService.Flags.HasFlag(EditorFlags.SaveFile);
                 shortcut = _inputService.GetActionBinding(InputActions.UiSaveAs);
                 if (ImGui.MenuItem("Save File As...", shortcut, false, enabled))
                 {
-                    // TODO: saving single modified file to different location
+                    _editorService.SaveActiveEditorChangesAs();
                 }
                 
                 enabled = _editorService.Flags.HasFlag(EditorFlags.SaveFile);
                 shortcut = _inputService.GetActionBinding(InputActions.UiSaveAll);
                 if (ImGui.MenuItem("Save All Files", shortcut, false, enabled))
                 {
-                    // TODO: saving all modified files
+                    foreach (var editor in _editorService.Editors)
+                    {
+                        _editorService.SaveEditorChanges(editor);
+                    }
                 }
                 
                 ImGui.Separator();

@@ -40,16 +40,6 @@ public class ResourceService : IResourceService
         Provider?.Dispose();
         Provider = null;
     }
-
-    public EditorComponent CreateEditorFor(string path)
-    {
-        var asset = Provider!.Load<object>(path);
-        return asset switch
-        {
-            TrackedSong song => new DiezEditor(_game, path, song),
-            _ => new NotSupportedComponent(_game, path)
-        };
-    }
     
     public void Dispose()
     {

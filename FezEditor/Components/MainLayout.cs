@@ -25,7 +25,7 @@ public class MainLayout : DrawableGameComponent
 
     public override void Update(GameTime gameTime)
     {
-        _editorService.UpdateActiveEditor(gameTime);
+        _editorService.Update(gameTime);
     }
 
     public override void Draw(GameTime gameTime)
@@ -67,7 +67,7 @@ public class MainLayout : DrawableGameComponent
                         foreach (var editor in _editorService.Editors)
                         {
                             var title = editor.Title;
-                            if (_editorService.HasEditorUnsavedChanges())
+                            if (_editorService.HasEditorUnsavedChanges(editor))
                             {
                                 title = "(*) " + title;
                             }

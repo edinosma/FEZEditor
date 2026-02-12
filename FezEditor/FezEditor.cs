@@ -16,10 +16,12 @@ public class FezEditor : Game
     private IImGuiService _imGui = null!;
     
     private IRenderingService _rendering = null!;
-    
-    private IEditorService _editor = null!;
+
+    private IResourceService _resource = null!;
     
     private IInputService _input = null!;
+    
+    private IEditorService _editor = null!;
 
     [STAThread]
     private static void Main(string[] args)
@@ -60,9 +62,9 @@ public class FezEditor : Game
     {
         _imGui = this.CreateService<IImGuiService, ImGuiService>();
         _rendering = this.CreateService<IRenderingService, RenderingService>();
+        _resource = this.CreateService<IResourceService, ResourceService>();
         _input = this.CreateService<IInputService, InputService>();
         _editor = this.CreateService<IEditorService, EditorService>();
-        this.CreateService<IResourceService, ResourceService>();
 
         this.AddComponent(new MenuBar(this));
         this.AddComponent(new FileBrowser(this));

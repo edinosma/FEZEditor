@@ -10,6 +10,10 @@ public interface IEditorService
     
     IEnumerable<EditorComponent> Editors { get; }
     
+    void Update(GameTime gameTime);
+
+    void OpenEditorFor(string path);
+    
     void OpenEditor(EditorComponent editor);
 
     void CloseEditor(EditorComponent editor);
@@ -21,12 +25,16 @@ public interface IEditorService
     void FlushPendingCloses();
 
     void MarkEditorActive(EditorComponent editor);
-    
-    void UpdateActiveEditor(GameTime gameTime);
 
     void UndoActiveEditorChanges();
     
     void RedoActiveEditorChanges();
 
-    bool HasEditorUnsavedChanges();
+    bool HasEditorUnsavedChanges(EditorComponent editor);
+
+    void SaveActiveEditorChanges();
+
+    void SaveActiveEditorChangesAs();
+    
+    void SaveEditorChanges(EditorComponent editor);
 }

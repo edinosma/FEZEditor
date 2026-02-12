@@ -3,15 +3,12 @@ using FezEditor.Structure;
 using FezEditor.Tools;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
-using Serilog;
 
 namespace FezEditor.Services;
 
 [UsedImplicitly]
-public class EditorService : IEditorService
+public partial class EditorService : IEditorService
 {
-    private static readonly ILogger Logger = Logging.Create<EditorService>();
-
     public EditorFlags Flags { get; private set; }
 
     public IEnumerable<EditorComponent> Editors => _editors;
@@ -20,13 +17,63 @@ public class EditorService : IEditorService
 
     private readonly List<EditorComponent> _pendingClose = new();
     
+    private readonly Dictionary<EditorComponent, EditorTracking> _tracking = new();
+
+    private readonly Game _game;
+    
     private readonly IInputService _inputService;
+    
+    private readonly IResourceService _resourceService;
     
     private EditorComponent? _activeEditor;
 
     public EditorService(Game game)
     {
+        _game = game;
         _inputService = game.GetService<IInputService>();
+        _resourceService = game.GetService<IResourceService>();
+    }
+    
+    public void Update(GameTime gameTime)
+    {
+        if (_activeEditor == null)
+        {
+            return;
+        }
+        
+        _activeEditor.Update(gameTime);
+        
+        if (_inputService.IsActionPressed(InputActions.UiUndo))
+        {
+            UndoActiveEditorChanges();
+        }
+        else if (_inputService.IsActionPressed(InputActions.UiRedo))
+        {
+            RedoActiveEditorChanges();
+        }
+        else if (_inputService.IsActionPressed(InputActions.UiSave))
+        {
+            SaveActiveEditorChanges();
+        }
+        else if (_inputService.IsActionPressed(InputActions.UiSaveAll))
+        {
+            foreach (var editor in Editors)
+            {
+                SaveEditorChanges(editor);
+            }
+        }
+    }
+    
+    public void OpenEditorFor(string path)
+    {
+        if (_tracking.Values.All(et => et.Path != path))
+        {
+            var asset = _resourceService.Load(path);
+            var editor = CreateEditorFor(asset, path);
+        
+            _tracking.Add(editor, new EditorTracking(path, false));
+            OpenEditor(editor);
+        }
     }
 
     public void OpenEditor(EditorComponent editor)
@@ -35,7 +82,14 @@ public class EditorService : IEditorService
         {
             _editors.Add(editor);
             _activeEditor = editor;
-            _activeEditor.History.StateChanged += UpdateHistoryFlags;
+            _activeEditor.History.StateChanged += () =>
+            {
+                if (_tracking.TryGetValue(editor, out var tracking))
+                {
+                    tracking.HasChanges = true;
+                    _tracking[editor] = tracking;
+                }
+            };
             UpdateFlags();
         }
     }
@@ -58,23 +112,7 @@ public class EditorService : IEditorService
     public void MarkEditorActive(EditorComponent editor)
     {
         _activeEditor = editor;
-    }
-
-    public void UpdateActiveEditor(GameTime gameTime)
-    {
-        if (_activeEditor != null)
-        {
-            _activeEditor.Update(gameTime);
-            if (_inputService.IsActionPressed(InputActions.UiUndo))
-            {
-                _activeEditor.History.Undo();
-            }
-
-            if (_inputService.IsActionPressed(InputActions.UiRedo))
-            {
-                _activeEditor.History.Redo();
-            }
-        }
+        UpdateFlags();
     }
 
     public void UndoActiveEditorChanges()
@@ -87,10 +125,42 @@ public class EditorService : IEditorService
         _activeEditor!.History.Redo();
     }
     
-    public bool HasEditorUnsavedChanges()
+    public bool HasEditorUnsavedChanges(EditorComponent editor)
     {
-        // TODO: implement this with saving
-        return _activeEditor!.History.UndoCount > 0;
+        return _tracking.Any(kv => kv.Key == editor && kv.Value.HasChanges) && editor.History.UndoCount > 0;
+    }
+
+    public void SaveActiveEditorChanges()
+    {
+        if (_tracking.TryGetValue(_activeEditor!, out var tracking) && tracking.HasChanges)
+        {
+            _resourceService.Save(tracking.Path, _activeEditor!.Asset);
+            tracking.HasChanges = false;
+            _tracking[_activeEditor] = tracking;
+        }
+    }
+
+    public void SaveActiveEditorChangesAs()
+    {
+        FileDialog.Show(FileDialog.Type.SaveFile, result =>
+        {
+            if (result.Files.Length > 0 && _tracking.TryGetValue(_activeEditor!, out var tracking) && tracking.HasChanges)
+            {
+                _resourceService.Save(result.Files[0], _activeEditor!.Asset);
+                tracking.HasChanges = false;
+                _tracking[_activeEditor] = tracking;
+            }
+        });
+    }
+
+    public void SaveEditorChanges(EditorComponent editor)
+    {
+        if (_tracking.TryGetValue(_activeEditor!, out var tracking) && tracking.HasChanges)
+        {
+            _resourceService.Save(editor.Title, editor.Asset);
+            tracking.HasChanges = false;
+            _tracking[_activeEditor!] = tracking;
+        }
     }
 
     public void FlushPendingCloses()
@@ -100,10 +170,9 @@ public class EditorService : IEditorService
             return;
         }
 
-        _activeEditor!.History.StateChanged -= UpdateHistoryFlags;
         foreach (var editor in _pendingClose)
         {
-            if (_editors.Remove(editor))
+            if (_editors.Remove(editor) && _tracking.Remove(editor))
             {
                 editor.Dispose();
             }
@@ -111,10 +180,6 @@ public class EditorService : IEditorService
             if (editor == _activeEditor)
             {
                 _activeEditor = _editors.Count > 0 ? _editors[^1] : null;
-                if (_activeEditor != null)
-                {
-                    _activeEditor.History.StateChanged += UpdateHistoryFlags;
-                }
                 UpdateFlags();
             }
         }
@@ -127,24 +192,19 @@ public class EditorService : IEditorService
         if (_activeEditor is WelcomeComponent)
         {
             Flags &= ~(EditorFlags.CloseFile | EditorFlags.QuitToWelcome);
+            return;
         }
-        else
+        
+        Flags |= EditorFlags.QuitToWelcome;
+        if (_activeEditor == null)
         {
-            Flags |= EditorFlags.QuitToWelcome;
-            if (Editors.Any())
-            {
-                Flags |= EditorFlags.CloseFile;
-            }
-            else
-            {
-                Flags &= ~EditorFlags.CloseFile;
-            }
+            Flags &= ~EditorFlags.CloseFile;
+            return;
         }
-    }
-    
-    private void UpdateHistoryFlags()
-    {
-        if (_activeEditor!.History.CanUndo)
+        
+        Flags |= EditorFlags.CloseFile;
+        
+        if (_activeEditor.History.CanUndo)
         {
             Flags |= EditorFlags.Undo;
         }
@@ -152,7 +212,7 @@ public class EditorService : IEditorService
         {
             Flags &= ~EditorFlags.Undo;
         }
-
+    
         if (_activeEditor.History.CanRedo)
         {
             Flags |= EditorFlags.Redo;
@@ -161,5 +221,21 @@ public class EditorService : IEditorService
         {
             Flags &= ~EditorFlags.Redo;
         }
+
+        if (_resourceService.IsReadonly)
+        {
+            return;
+        }
+
+        if (_tracking.Values.Any(et => et.HasChanges))
+        {
+            Flags |= EditorFlags.SaveFile;
+        }
+        else
+        {
+            Flags &= ~EditorFlags.SaveFile;
+        }
     }
+
+    private record struct EditorTracking(string Path, bool HasChanges);
 }

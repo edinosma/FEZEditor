@@ -255,8 +255,7 @@ public class FileBrowser : DrawableGameComponent
                     if (!node.IsDirectory && ImGui.IsItemHovered())
                     {
                         var path = node.Path[(_root.Path.Length + 1)..];
-                        var editor = _resourceService.CreateEditorFor(path);
-                        _editorService.OpenEditor(editor);
+                        _editorService.OpenEditorFor(path);
                     }
                 }
                 

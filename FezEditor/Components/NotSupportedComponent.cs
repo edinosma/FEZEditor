@@ -5,13 +5,16 @@ namespace FezEditor.Components;
 
 public class NotSupportedComponent : EditorComponent
 {
-    public NotSupportedComponent(Game game, string title) : base(game, title)
+    private readonly Type _type;
+    
+    public NotSupportedComponent(Game game, string title, Type type) : base(game, title)
     {
+        _type = type;
     }
 
     public override void Draw()
     {
-        const string text = "(!) Not supported...";
+        var text = $"(!) There's no editor for the asset of {_type.Name} type!";
         ImGuiX.SetTextCentered(text);
         ImGui.Text(text);
     }
