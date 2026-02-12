@@ -12,9 +12,6 @@ public class DirResourceProvider : IResourceProvider
     public string Root => _directory.Name;
 
     public IEnumerable<string> Files => _files.Keys;
-    
-    public event Action? Refreshed;
-    public event Action? Disposed;
 
     private readonly Dictionary<string, FileInfo> _files = new(StringComparer.OrdinalIgnoreCase);
 
@@ -100,13 +97,11 @@ public class DirResourceProvider : IResourceProvider
             var normalizedPath = path.Replace(path.GetExtension(), "").Replace('\\', '/');
             _files[normalizedPath] = file;
         }
-        Refreshed?.Invoke();
     }
 
     public void Dispose()
     {
         GC.SuppressFinalize(this);
         _files.Clear();
-        Disposed?.Invoke();
     }
 }

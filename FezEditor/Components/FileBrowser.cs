@@ -44,7 +44,7 @@ public class FileBrowser : DrawableGameComponent
 
     public void Draw()
     {
-        if (_resourceService.Provider == null)
+        if (_resourceService.HasNoProvider)
         {
             const string text = "No resources loaded...";
             ImGuiX.SetTextCentered(text);
@@ -318,18 +318,17 @@ public class FileBrowser : DrawableGameComponent
 
     private void BuildNodeTree()
     {
-        if (_resourceService.Provider == null)
+        if (_resourceService.HasNoProvider)
         {
             _root = null;
             _filter = "";
             return;
         }
-
-        var provider = _resourceService.Provider;
+        
         _root = new FileNode
         {
-            Name = provider.Root,
-            Path = provider.Root,
+            Name = _resourceService.Root,
+            Path = _resourceService.Root,
             IsDirectory = true,
             Depth = 0
         };
@@ -339,7 +338,7 @@ public class FileBrowser : DrawableGameComponent
             [""] = _root
         };
 
-        foreach (var path in provider.Files)
+        foreach (var path in _resourceService.Files)
         {
             var segments = path.Split('/');
             var currentPath = "";

@@ -10,9 +10,6 @@ public class PakResourceProvider : IResourceProvider
     public string Root => _pakFile.Name;
 
     public IEnumerable<string> Files => _records.Keys;
-    
-    public event Action? Refreshed;
-    public event Action? Disposed;
 
     private readonly Dictionary<string, string> _records = new(StringComparer.OrdinalIgnoreCase);
     
@@ -91,14 +88,11 @@ public class PakResourceProvider : IResourceProvider
             var normalizedPath = record.Path.Replace('\\', '/');
             _records[normalizedPath] = record.FindExtension();
         }
-        
-        Refreshed?.Invoke();
     }
 
     public void Dispose()
     {
         GC.SuppressFinalize(this);
         _records.Clear();
-        Disposed?.Invoke();
     }
 }

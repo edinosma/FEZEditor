@@ -7,10 +7,6 @@ public interface IResourceProvider : IDisposable
     string Root { get; }
     
     IEnumerable<string> Files { get; }
-    
-    event Action? Refreshed;
-    
-    event Action? Disposed;
 
     bool Exists(string path);
     

@@ -13,7 +13,7 @@ public class TestComponent : EditorComponent
     public TestComponent(Game game, string title) : base(game, title)
     {
         var resourceService = game.GetService<IResourceService>();
-        var artObject = resourceService.Provider!.Load<object>("art objects/big_treeao");
+        var artObject = resourceService.Load("art objects/big_treeao");
         _host = new GeometryHost(game);
         _host.Load(artObject);
     }
