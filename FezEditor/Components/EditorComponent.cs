@@ -16,6 +16,8 @@ public abstract class EditorComponent
     protected Game Game { get; }
 
     protected RenderingService RenderingService { get; }
+    
+    protected ResourceService ResourceService { get; }
 
     protected EditorComponent(Game game, string title)
     {
@@ -23,6 +25,7 @@ public abstract class EditorComponent
         Title = title;
         History = new History();
         RenderingService = game.GetService<RenderingService>();
+        ResourceService = game.GetService<ResourceService>();
     }
 
     public virtual void Update(GameTime gameTime)

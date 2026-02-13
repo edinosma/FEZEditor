@@ -43,6 +43,27 @@ internal class DirResourceProvider : IResourceProvider
         return _files.GetValueOrDefault(path)?.FullName ?? "";
     }
 
+    public Stream OpenStream(string path, string extension)
+    {
+        var info = _files.GetValueOrDefault(path);
+        if (info is not { Exists: true })
+        {
+            throw new FileNotFoundException(path);
+        }
+        
+        var bundles = FileBundle.BundleFilesAtPath(info.FullName);
+        foreach (var bundle in bundles)
+        {
+            if (bundle.MainExtension.Equals(extension, StringComparison.OrdinalIgnoreCase) && bundle.Files.Count == 1)
+            {
+                var file = bundle.Files[0];
+                return file.Data;
+            }
+        }
+        
+        throw new FileNotFoundException(path);
+    }
+
     public T Load<T>(string path) where T : class
     {
         var info = _files.GetValueOrDefault(path);

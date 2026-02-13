@@ -42,6 +42,27 @@ internal class PakResourceProvider : IResourceProvider
             ? Path.Combine(_pakFile.Name, path + extension)
             : "";
     }
+    
+    public Stream OpenStream(string path, string extension)
+    {
+        if (!(Exists(path) && _records.ContainsValue(extension)))
+        {
+            throw new FileNotFoundException(path);
+        }
+        
+        using var stream = _pakFile.OpenRead();
+        using var reader = new PakReader(stream);
+        
+        var record = reader.ReadFiles().FirstOrDefault(r => 
+            r.Path.Equals(path, StringComparison.OrdinalIgnoreCase));
+        
+        if (record == null)
+        {
+            throw new FileNotFoundException(path);
+        }
+
+        return record.Open();
+    }
 
     public T Load<T>(string path) where T : class
     {

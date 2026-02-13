@@ -14,6 +14,8 @@ internal interface IResourceProvider : IDisposable
     
     string GetExtension(string path);
     
+    Stream OpenStream(string path, string extension);
+    
     T Load<T>(string path) where T : class;
     
     void Save<T>(string path, T asset) where T : class;

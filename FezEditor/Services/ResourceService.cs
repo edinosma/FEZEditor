@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Media;
 
 namespace FezEditor.Services;
 
@@ -56,6 +57,11 @@ public class ResourceService : IDisposable
         ProviderChanged?.Invoke();
         _provider?.Dispose();
         _provider = null;
+    }
+
+    public Stream OpenStream(string path, string extension)
+    {
+        return _provider!.OpenStream(path, extension);
     }
 
     public object Load(string path)

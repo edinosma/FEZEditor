@@ -1,6 +1,7 @@
 ﻿using FEZRepacker.Core.Definitions.Game.TrackedSong;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 
 namespace FezEditor.Components;
 
@@ -12,10 +13,28 @@ public class DiezEditor : EditorComponent
     
     private int _loopIndex = -1;
 
+    private SoundEffect? _assembleChordSound;
+    
+    private TimeSpan _assembleChordElapsed = TimeSpan.Zero;
+
     public DiezEditor(Game game, string title, TrackedSong trackedSong) : base(game, title)
     {
         _trackedSong = trackedSong;
         History.Track(trackedSong);
+    }
+
+    public override void Update(GameTime gameTime)
+    {
+        if (_assembleChordSound != null)
+        {
+            _assembleChordElapsed += gameTime.ElapsedGameTime;
+            if (_assembleChordElapsed >= _assembleChordSound.Duration)
+            {
+                _assembleChordSound.Dispose();
+                _assembleChordSound = null;
+                _assembleChordElapsed = TimeSpan.Zero;
+            }
+        }
     }
 
     public override void Draw()
@@ -83,10 +102,24 @@ public class DiezEditor : EditorComponent
                         }
                     }
                 }
+
+                if (_assembleChordSound != null)
+                {
+                    ImGui.BeginDisabled();
+                }
                 
                 if (ImGui.Button("(>) Play Assemble Chord to Preview"))
                 {
-                    // TODO: Play chord sound
+                    var path = $"Sounds/Collects/SplitUpCube/Assemble_{_trackedSong.AssembleChord}";
+                    using var stream = ResourceService.OpenStream(path, ".wav");
+                    _assembleChordSound = SoundEffect.FromStream(stream);
+                    _assembleChordSound.Play();
+                    _assembleChordElapsed = TimeSpan.Zero;
+                }
+                
+                if (_assembleChordSound != null)
+                {
+                    ImGui.EndDisabled();
                 }
             }
             
