@@ -180,10 +180,10 @@ public partial class EditorService
             if (editor == _activeEditor)
             {
                 _activeEditor = _editors.Count > 0 ? _editors[^1] : null;
-                UpdateFlags();
             }
         }
 
+        UpdateFlags();
         _pendingClose.Clear();
     }
     
@@ -195,10 +195,9 @@ public partial class EditorService
             return;
         }
         
-        Flags |= EditorFlags.QuitToWelcome;
+        Flags = EditorFlags.QuitToWelcome;
         if (_activeEditor == null)
         {
-            Flags &= ~EditorFlags.CloseFile;
             return;
         }
         
