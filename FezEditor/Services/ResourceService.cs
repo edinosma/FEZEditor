@@ -1,6 +1,7 @@
-﻿using JetBrains.Annotations;
+﻿using FezEditor.Structure;
+using FezEditor.Tools;
+using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Media;
 
 namespace FezEditor.Services;
 
@@ -71,7 +72,21 @@ public class ResourceService : IDisposable
 
     public void Save(string path, object asset)
     {
+        if (asset is SaveData saveData)
+        {
+            using var stream = SaveDataLoader.Write(saveData);
+            using var fileStream = new FileStream(path, FileMode.Create);
+            stream.CopyTo(fileStream);
+            return;
+        }
+        
         _provider!.Save(path, asset);
+    }
+    
+    public static SaveData ReadSaveData(string path)
+    {
+        using var stream = File.OpenRead(path);
+        return SaveDataLoader.Read(stream);
     }
 
     public void Dispose()

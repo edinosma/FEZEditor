@@ -41,7 +41,7 @@ public class WelcomeComponent : EditorComponent
         ImGui.Text("Welcome to FEZEDITOR!");
         ImGui.NewLine();
 
-        if (ImGui.Button("Open PAK..."))
+        if (ImGui.Button("Open PAK file"))
         {
             FileDialog.Show(FileDialog.Type.OpenFile, OpenPakFile, new FileDialog.Options
             {
@@ -53,7 +53,7 @@ public class WelcomeComponent : EditorComponent
             });
         }
 
-        if (ImGui.Button("Open assets directory..."))
+        if (ImGui.Button("Open assets directory"))
         {
             FileDialog.Show(FileDialog.Type.OpenFolder, OpenDirectory, new FileDialog.Options
             {
@@ -65,7 +65,7 @@ public class WelcomeComponent : EditorComponent
         {
             var selectOptions = new FileDialog.Options
             {
-                Title = "Select PAK files to extract...",
+                Title = "Select PAK files to extract",
                 AllowMultiple = true,
                 Filters = new FileDialog.Filter[]
                 {
@@ -85,6 +85,22 @@ public class WelcomeComponent : EditorComponent
                     }
                 },
                 selectOptions);
+        }
+
+        if (ImGui.Button("Open SaveSlot file to edit"))
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var fezPath = Path.Combine(appData, "FEZ", "SaveSlot");
+            
+            FileDialog.Show(FileDialog.Type.OpenFile, OpenSaveSlot, new FileDialog.Options
+            {
+                Title = "Choose SaveSlot file...",
+                DefaultLocation = fezPath,
+                Filters = new FileDialog.Filter[]
+                {
+                    new("SaveSlot", "*")
+                }
+            });
         }
 
         if (ImGui.Button("Quit"))
@@ -123,6 +139,18 @@ public class WelcomeComponent : EditorComponent
         {
             _resourceService.OpenProvider(new DirectoryInfo(dirPath));
             _editorService.CloseEditor(this);
+        }
+    }
+    
+    private void OpenSaveSlot(FileDialog.Result result)
+    {
+        var saveSlotPath = result.Files.FirstOrDefault();
+        if (!string.IsNullOrEmpty(saveSlotPath))
+        {
+            var title = Path.GetFileNameWithoutExtension(saveSlotPath);
+            var saveSlot = ResourceService.ReadSaveData(saveSlotPath);
+            _editorService.CloseEditor(this);
+            _editorService.OpenEditor(new SallyEditor(Game, title, saveSlot));
         }
     }
 }
