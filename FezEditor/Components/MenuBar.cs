@@ -91,7 +91,7 @@ public class MenuBar : DrawableGameComponent
 
                 enabled = _editorService.Flags.HasFlag(EditorFlags.QuitToWelcome);
                 shortcut = _inputService.GetActionBinding(InputActions.UiQuitToWelcome);
-                if (ImGui.MenuItem("Quit To Welcome", shortcut, false, enabled))
+                if (ImGui.MenuItem("Close All", shortcut, false, enabled))
                 {
                     // TODO: add safeguard modal
                     _resourceService.CloseProvider();
