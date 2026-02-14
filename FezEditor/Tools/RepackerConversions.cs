@@ -4,15 +4,6 @@ using FEZRepacker.Core.Definitions.Game.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-using RVector2 = FEZRepacker.Core.Definitions.Game.XNA.Vector2;
-using RVector3 = FEZRepacker.Core.Definitions.Game.XNA.Vector3;
-using RVector4 = FEZRepacker.Core.Definitions.Game.XNA.Vector4;
-using RQuaternion = FEZRepacker.Core.Definitions.Game.XNA.Quaternion;
-using RColor = FEZRepacker.Core.Definitions.Game.XNA.Color;
-using RTexture2D = FEZRepacker.Core.Definitions.Game.XNA.Texture2D;
-using RAnimatedTexture = FEZRepacker.Core.Definitions.Game.Graphics.AnimatedTexture;
-using RRectangle = FEZRepacker.Core.Definitions.Game.XNA.Rectangle;
-
 namespace FezEditor.Tools;
 
 public static class RepackerConversions

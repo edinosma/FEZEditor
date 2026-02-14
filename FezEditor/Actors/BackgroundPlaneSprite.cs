@@ -4,9 +4,6 @@ using FezEditor.Tools;
 using FEZRepacker.Core.Definitions.Game.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-//
-using RAnimatedTexture = FEZRepacker.Core.Definitions.Game.Graphics.AnimatedTexture;
-using RTexture2D = FEZRepacker.Core.Definitions.Game.XNA.Texture2D;
 
 namespace FezEditor.Actors;
 

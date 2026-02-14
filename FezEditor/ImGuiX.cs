@@ -3,10 +3,6 @@ using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-using NVector2 = System.Numerics.Vector2;
-using NVector3 = System.Numerics.Vector3;
-using NVector4 = System.Numerics.Vector4;
-
 // ReSharper disable CheckNamespace
 namespace ImGuiNET;
 
