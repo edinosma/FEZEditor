@@ -171,11 +171,13 @@ public partial class ImGuiService : IDisposable
         var lastDepthStencil = _game.GraphicsDevice.DepthStencilState;
         var lastBlendFactor = _game.GraphicsDevice.BlendFactor;
         var lastBlendState = _game.GraphicsDevice.BlendState;
+        var samplerState = _game.GraphicsDevice.SamplerStates[0];
 
         _game.GraphicsDevice.BlendFactor = Color.White;
         _game.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
         _game.GraphicsDevice.RasterizerState = _rasterizerState;
         _game.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
+        _game.GraphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
 
         // Handle cases of screen coordinates != from framebuffer coordinates (e.g. retina displays)
         var io = ImGui.GetIO();
@@ -196,6 +198,7 @@ public partial class ImGuiService : IDisposable
         _game.GraphicsDevice.DepthStencilState = lastDepthStencil;
         _game.GraphicsDevice.BlendState = lastBlendState;
         _game.GraphicsDevice.BlendFactor = lastBlendFactor;
+        _game.GraphicsDevice.SamplerStates[0] = samplerState;
     }
 
     private unsafe void UpdateBuffers(ImDrawDataPtr drawData)
