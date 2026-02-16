@@ -15,12 +15,20 @@ public class MainLayout : DrawableGameComponent
 
     private readonly StatusBar _statusBar;
 
+    private readonly ConfirmWindow _confirm;
+
     public MainLayout(Game game) : base(game)
     {
         _editorService = Game.GetService<EditorService>();
         _fileBrowser = Game.GetComponent<FileBrowser>();
         _statusBar = Game.GetComponent<StatusBar>();
+        Game.AddComponent(_confirm = new ConfirmWindow(game));
         DrawOrder = -1;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        Game.RemoveComponent(_confirm);
     }
 
     public override void Update(GameTime gameTime)
@@ -79,25 +87,13 @@ public class MainLayout : DrawableGameComponent
                             
                             if (beginTabItem)
                             {
-                                _editorService.MarkEditorActive(editor);
-                                if (_editorService.IsEditorLoading(editor))
-                                {
-                                    var dotCount = ((int)(ImGui.GetTime() * 2) % 4);
-                                    var dots = new string('.', dotCount);
-                                    var text = $"Loading{dots}";
-                                    ImGuiX.SetTextCentered(text);
-                                    ImGui.Text(text);
-                                }
-                                else
-                                {
-                                    editor.Draw();
-                                }
+                                DrawEditor(editor);
                                 ImGui.EndTabItem();
                             }
 
                             if (!isOpen)
                             {
-                                _editorService.CloseEditor(editor);
+                                SaveAndCloseEditor(editor);
                             }
                         }
 
@@ -120,5 +116,42 @@ public class MainLayout : DrawableGameComponent
 
         ImGui.End();
         ImGui.PopStyleVar(2);
+    }
+
+    private void DrawEditor(EditorComponent editor)
+    {
+        _editorService.MarkEditorActive(editor);
+        if (!_editorService.IsEditorLoading(editor))
+        {
+            editor.Draw();
+            return;
+        }
+        
+        var dotCount = ((int)(ImGui.GetTime() * 2) % 4);
+        var dots = new string('.', dotCount);
+        var text = $"Loading{dots}";
+        ImGuiX.SetTextCentered(text);
+        ImGui.Text(text);
+    }
+
+    private void SaveAndCloseEditor(EditorComponent editor)
+    {
+        if (!_editorService.HasEditorUnsavedChanges(editor))
+        {
+            _editorService.CloseEditor(editor);
+            return;
+        }
+
+        _confirm.Title = "Before closing the editor...";
+        _confirm.Text = "Save current changes?";
+        _confirm.Confirmed = () =>
+        {
+            _editorService.SaveEditorChanges(editor);
+            _editorService.CloseEditor(editor);
+        };
+        _confirm.Canceled = () =>
+        {
+            _editorService.CloseEditor(editor);
+        };
     }
 }
