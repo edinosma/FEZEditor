@@ -3,12 +3,15 @@ using FezEditor.Structure;
 using FezEditor.Tools;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
+using Serilog;
 
 namespace FezEditor.Services;
 
 [UsedImplicitly]
 public partial class EditorService
 {
+    private static readonly ILogger Logger = Logging.Create<EditorService>(); 
+    
     public EditorFlags Flags { get; private set; }
 
     public IEnumerable<EditorComponent> Editors => _editors;
@@ -16,6 +19,8 @@ public partial class EditorService
     private readonly List<EditorComponent> _editors = new();
 
     private readonly List<EditorComponent> _pendingClose = new();
+    
+    private readonly HashSet<EditorComponent> _loading = new();
     
     private readonly Dictionary<EditorComponent, EditorTracking> _tracking = new();
 
@@ -36,7 +41,7 @@ public partial class EditorService
     
     public void Update(GameTime gameTime)
     {
-        if (_activeEditor == null)
+        if (_activeEditor == null || _loading.Contains(_activeEditor))
         {
             return;
         }
@@ -90,6 +95,7 @@ public partial class EditorService
                     _tracking[editor] = tracking;
                 }
             };
+            _ = LoadEditorContentAsync(editor);
             UpdateFlags();
         }
     }
@@ -185,6 +191,28 @@ public partial class EditorService
 
         UpdateFlags();
         _pendingClose.Clear();
+    }
+
+    public bool IsEditorLoading(EditorComponent editor)
+    {
+        return _loading.Contains(editor);
+    }
+
+    private async Task LoadEditorContentAsync(EditorComponent editor)
+    {
+        _loading.Add(editor);
+        try
+        {
+            await Task.Run(editor.LoadContent);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to load editor for {0}", editor.Title);
+        }
+        finally
+        {
+            _loading.Remove(editor);
+        }
     }
     
     private void UpdateFlags()

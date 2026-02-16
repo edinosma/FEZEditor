@@ -33,6 +33,10 @@ public class PoEditor : EditorComponent
         _textStorage = textStorage;
         History.Track(_textStorage);
         History.StateChanged += UpdateTableView;
+    }
+
+    public override void LoadContent()
+    {
         UpdateTableView();
     }
 

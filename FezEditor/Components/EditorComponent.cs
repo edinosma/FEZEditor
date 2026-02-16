@@ -18,6 +18,8 @@ public abstract class EditorComponent
     protected RenderingService RenderingService { get; }
     
     protected ResourceService ResourceService { get; }
+    
+    protected IContentManager ContentManager { get; }
 
     protected EditorComponent(Game game, string title)
     {
@@ -26,6 +28,11 @@ public abstract class EditorComponent
         History = new History();
         RenderingService = game.GetService<RenderingService>();
         ResourceService = game.GetService<ResourceService>();
+        ContentManager = game.GetService<ContentService>().Get(this);
+    }
+
+    public virtual void LoadContent()
+    {
     }
 
     public virtual void Update(GameTime gameTime)
@@ -38,5 +45,6 @@ public abstract class EditorComponent
 
     public virtual void Dispose()
     {
+        Game.GetService<ContentService>().Unload(this);
     }
 }

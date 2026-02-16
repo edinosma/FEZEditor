@@ -34,22 +34,15 @@ public class SallyEditor : EditorComponent
         _resources = game.GetService<ResourceService>();
         _saveData = saveData;
         History.Track(saveData);
-        LoadLevelIcons();
     }
 
-    private void LoadLevelIcons()
+    public override void LoadContent()
     {
-        var content = Game.GetService<ContentService>().Get(this);
-        var listing = content.LoadJson<Dictionary<string, string>>("MapScreensListing");
+        var listing = ContentManager.LoadJson<Dictionary<string, string>>("MapScreensListing");
         foreach (var (level, texturePath) in listing)
         {
-            _icons[level] = content.Load<Texture2D>(texturePath);
+            _icons[level] = ContentManager.Load<Texture2D>(texturePath);
         }
-    }
-
-    public override void Dispose()
-    {
-        Game.GetService<ContentService>().Unload(this);
     }
 
     public override void Draw()

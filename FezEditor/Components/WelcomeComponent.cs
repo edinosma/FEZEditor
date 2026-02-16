@@ -14,7 +14,7 @@ public class WelcomeComponent : EditorComponent
     
     private ResourceExtractor? _resourceExtractor;
     
-    private readonly Texture2D _logoTexture;
+    private Texture2D _logoTexture = null!;
     
     private readonly EditorService _editorService;
     
@@ -22,9 +22,13 @@ public class WelcomeComponent : EditorComponent
 
     public WelcomeComponent(Game game) : base(game, "Welcome")
     {
-        _logoTexture = Game.Content.Load<Texture2D>("Icon");
         _editorService = game.GetService<EditorService>();
         _resourceService = game.GetService<ResourceService>();
+    }
+
+    public override void LoadContent()
+    {
+        _logoTexture = ContentManager.Load<Texture2D>("Icon");
     }
 
     public override void Draw()

@@ -80,7 +80,18 @@ public class MainLayout : DrawableGameComponent
                             if (beginTabItem)
                             {
                                 _editorService.MarkEditorActive(editor);
-                                editor.Draw();
+                                if (_editorService.IsEditorLoading(editor))
+                                {
+                                    var dotCount = ((int)(ImGui.GetTime() * 2) % 4);
+                                    var dots = new string('.', dotCount);
+                                    var text = $"Loading{dots}";
+                                    ImGuiX.SetTextCentered(text);
+                                    ImGui.Text(text);
+                                }
+                                else
+                                {
+                                    editor.Draw();
+                                }
                                 ImGui.EndTabItem();
                             }
 

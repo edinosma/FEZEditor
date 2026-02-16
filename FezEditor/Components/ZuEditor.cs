@@ -11,9 +11,9 @@ public class ZuEditor : EditorComponent
 
     private readonly FezFont _font;
 
-    private readonly Texture2D _fontTexture;
+    private Texture2D _fontTexture = null!;
     
-    private readonly IntPtr _fontTexturePtr;
+    private IntPtr _fontTexturePtr;
     
     private ImFontPtr _charactersFont;
 
@@ -36,14 +36,14 @@ public class ZuEditor : EditorComponent
     public ZuEditor(Game game, string title, FezFont font) : base(game, title)
     {
         _font = font;
-        _fontTexture = font.Texture.ToXna(RenderingService.GraphicsDevice);
-        _fontTexturePtr = ImGuiX.Bind(_fontTexture);
         History.Track(font);
-        LoadFont();
     }
 
-    private void LoadFont()
+    public override void LoadContent()
     {
+        _fontTexture = _font.Texture.ToXna(RenderingService.GraphicsDevice);
+        _fontTexturePtr = ImGuiX.Bind(_fontTexture);
+        
         if (Title.Contains("japanese", StringComparison.OrdinalIgnoreCase))
         {
             _charactersFont = ImGuiX.Fonts.NotoSansJp;
