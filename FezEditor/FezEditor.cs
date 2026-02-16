@@ -72,7 +72,6 @@ public class FezEditor : Game
         Content = (ContentManager)_content.Global;
         this.AddComponent(new MenuBar(this));
         this.AddComponent(new FileBrowser(this));
-        this.AddComponent(new StatusBar(this));
         this.AddComponent(new MainLayout(this));
         _editor.OpenEditor(new WelcomeComponent(this));
 

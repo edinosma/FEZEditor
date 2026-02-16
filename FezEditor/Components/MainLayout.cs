@@ -14,15 +14,12 @@ public class MainLayout : DrawableGameComponent
 
     private readonly FileBrowser _fileBrowser;
 
-    private readonly StatusBar _statusBar;
-
     private readonly ConfirmWindow _confirm;
 
     public MainLayout(Game game) : base(game)
     {
         _editorService = Game.GetService<EditorService>();
         _fileBrowser = Game.GetComponent<FileBrowser>();
-        _statusBar = Game.GetComponent<StatusBar>();
         Game.AddComponent(_confirm = new ConfirmWindow(game));
         DrawOrder = -1;
     }
@@ -54,13 +51,11 @@ public class MainLayout : DrawableGameComponent
                 ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus |
                 ImGuiWindowFlags.NoSavedSettings))
         {
-            var statusBarHeight = ImGui.GetFrameHeightWithSpacing();
-
-            // Top region: Left pane + Right pane
+            // Region: Left pane + Right pane
             {
                 // Left pane - File Browser (resizable horizontally)
                 {
-                    ImGuiX.BeginChild("LeftPane", new Vector2(DefaultLeftPaneWidth, -statusBarHeight),
+                    ImGuiX.BeginChild("LeftPane", new Vector2(DefaultLeftPaneWidth, 0),
                         ImGuiChildFlags.Border | ImGuiChildFlags.ResizeX);
                     _fileBrowser.Draw();
                     ImGui.EndChild();
@@ -68,7 +63,7 @@ public class MainLayout : DrawableGameComponent
                 }
 
                 // Right pane - Editor tabs
-                ImGuiX.BeginChild("RightPane", new Vector2(0, -statusBarHeight));
+                ImGuiX.BeginChild("RightPane", Vector2.Zero);
                 if (_editorService.Editors.Any())
                 {
                     if (ImGui.BeginTabBar("##EditorTabs"))
@@ -109,10 +104,6 @@ public class MainLayout : DrawableGameComponent
                 }
                 ImGui.EndChild();
             }
-
-            // Full width, bottom
-            ImGui.Separator();
-            _statusBar.Draw();
         }
 
         ImGui.End();
