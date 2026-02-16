@@ -14,6 +14,8 @@ public class SallyEditor : EditorComponent
     private const string Missing = "MISSING";
     
     public override object Asset => _saveData;
+    
+    private readonly EditWindow _edit;
 
     private readonly ConfirmWindow _confirm;
 
@@ -33,15 +35,17 @@ public class SallyEditor : EditorComponent
 
     public SallyEditor(Game game, string title, SaveData saveData) : base(game, title)
     {
-        game.AddComponent(_confirm = new ConfirmWindow(game));
         _resources = game.GetService<ResourceService>();
         _saveData = saveData;
         History.Track(saveData);
+        Game.AddComponent(_edit = new EditWindow(game));
+        Game.AddComponent(_confirm = new ConfirmWindow(game));
     }
 
     public override void Dispose()
     {
-        _confirm.Dispose();
+        Game.RemoveComponent(_edit);
+        Game.RemoveComponent(_confirm);
     }
 
     public override void LoadContent()
@@ -739,67 +743,45 @@ public class SallyEditor : EditorComponent
     
     private void DrawRenameLevelModal()
     {
-        if (_nextState == State.RenameLevel)
+        if (_nextState != State.RenameLevel)
         {
-            ImGuiX.SetNextWindowCentered();
-            ImGui.OpenPopup("##RenameLevel");
-            _levelName = _saveData.World.GetAt(_levelIndex).Key;
-            _nextState = State.PropertiesView;
+            return;
         }
         
-        ImGuiX.SetNextWindowSize(new Vector2(400, 0), ImGuiCond.FirstUseEver);
-        if (ImGui.BeginPopupModal("##RenameLevel",
-                ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoTitleBar))
+        _nextState = State.PropertiesView;
+        _levelName = _saveData.World.GetAt(_levelIndex).Key;
+
+        _edit.Text = "Enter new level name:";
+        _edit.EditValue = () =>
         {
-            ImGui.Text("Enter level name");
-            ImGui.Separator();
-            
             ImGui.InputText("##NewLevelName", ref _levelName, 255);
-            if (ImGui.IsWindowAppearing())
-            {
-                ImGui.SetKeyboardFocusHere(-1);
-            }
-
-            ImGui.Separator();
-
+           
             var levelExists = _saveData.World.ContainsKey(_levelName);
             if (levelExists)
             {
-                ImGuiX.TextColored(new Color(1, 0.3f, 0.3f, 1), "Level already exists.");
+                ImGuiX.TextColored(Color.Red, "Level already exists.");
             }
 
             var levelEmpty = string.IsNullOrWhiteSpace(_levelName);
             if (levelEmpty)
             {
-                ImGuiX.TextColored(new Color(1, 0.3f, 0.3f, 1), "Level cannot be empty.");
+                ImGuiX.TextColored(Color.Red, "Level cannot be empty.");
             }
 
-            ImGui.BeginDisabled(levelExists || levelEmpty);
-            if (ImGui.Button("Rename"))
+            return !levelExists && !levelEmpty;
+        };
+        
+        _edit.Accepted = () =>
+        {
+            using (History.BeginScope("Rename Level"))
             {
-                using (History.BeginScope("Rename Level"))
-                {
-                    var kv = _saveData.World.GetAt(_levelIndex);
-                    _saveData.World.Remove(kv.Key);
-                    _saveData.World[_levelName] = kv.Value;
-                    _levelIndex = -1;
-                }
-                
+                var kv = _saveData.World.GetAt(_levelIndex);
+                _saveData.World.Remove(kv.Key);
+                _saveData.World[_levelName] = kv.Value;
+                _levelIndex = -1;
                 _levelName = "";
-                ImGui.CloseCurrentPopup();
             }
-
-            ImGui.EndDisabled();
-
-            ImGui.SameLine();
-            if (ImGui.Button("Cancel"))
-            {
-                _levelName = "";
-                ImGui.CloseCurrentPopup();
-            }
-
-            ImGui.EndPopup();
-        }
+        };
     }
 
     private void DrawDeleteLevelModal()
