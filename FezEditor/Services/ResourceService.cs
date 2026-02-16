@@ -68,6 +68,11 @@ public class ResourceService : IDisposable
         return _provider!.OpenStream(path, extension);
     }
 
+    public string GetExtension(string path)
+    {
+        return _provider?.GetExtension(path) ?? string.Empty;
+    }
+
     public object Load(string path)
     {
         if (path.Contains("SaveSlot", StringComparison.OrdinalIgnoreCase))

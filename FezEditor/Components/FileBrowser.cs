@@ -188,7 +188,7 @@ public class FileBrowser : DrawableGameComponent
             _tree.Push((_root, false));
 
             ImGui.PushStyleVar(ImGuiStyleVar.IndentSpacing, 8);
-            ImGuiX.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8, 4));
+            ImGuiX.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8, 6));
             while (_tree.Count > 0)
             {
                 var (node, shouldPop) = _tree.Pop();
@@ -229,7 +229,19 @@ public class FileBrowser : DrawableGameComponent
                     ImGui.SetNextItemOpen(true);
                 }
 
-                var nodeOpen = ImGui.TreeNodeEx($"{node.Path}##{node.Path}", nodeFlags, $"{node.Name}");
+                // Choose icon based on node type
+                var icon = node.IsDirectory
+                    ? (node.IsOpen ? Icons.FolderOpened : Icons.Folder)
+                    : GetFileIcon(node.Extension);
+                
+                var label = $"{icon} {node.Name}";
+                var nodeOpen = ImGui.TreeNodeEx($"{node.Path}##{node.Path}", nodeFlags, label);
+
+                // Update open state for next frame
+                if (node.IsDirectory)
+                {
+                    node.IsOpen = nodeOpen;
+                }
                 if (ImGui.IsItemClicked())
                 {
                     _selected = node;
@@ -379,7 +391,7 @@ public class FileBrowser : DrawableGameComponent
                 Path = _root.Path + "/" + path,
                 IsDirectory = false,
                 Depth = parentNodeForFile.Depth + 1,
-                Extension = Path.GetExtension(fileName)
+                Extension = _resourceService.GetExtension(path)
             };
 
             parentNodeForFile.Children.Add(fileNode);
@@ -484,6 +496,23 @@ public class FileBrowser : DrawableGameComponent
         }
     }
 
+    private static string GetFileIcon(string extension)
+    {
+        if (string.IsNullOrEmpty(extension))
+        {
+            return Icons.File;
+        }
+        
+        var parts = extension.TrimStart('.').Split('.');
+        var lastExt = parts.Length > 0 ? parts[^1].ToLowerInvariant() : "";
+        return lastExt switch
+        {
+            "json" => Icons.Json,
+            "png" or "jpg" or "jpeg" or "gif" or "bmp" or "glb" => Icons.FileMedia,
+            _ => Icons.File
+        };
+    }
+
     private class FileNode
     {
         public string Name { get; init; } = "";
@@ -493,5 +522,6 @@ public class FileBrowser : DrawableGameComponent
         public int Depth { get; init; } // Track depth for indentation
         public string Extension { get; init; } = "";
         public bool MatchesFilter { get; set; }
+        public bool IsOpen { get; set; } // Track if directory is open
     }
 }
