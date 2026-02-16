@@ -603,7 +603,7 @@ public static class ImGuiX
         ImGui.Text(label);
         ImGui.SameLine();
         
-        var count = "item" + (items.Count > 1 ? "s" : "");
+        var count = "item" + (items.Count is > 1 or 0 ? "s" : "");
         var header = $"List ({items.Count} {count})##Header_{hash}";
         if (ImGui.CollapsingHeader(header))
         {
@@ -666,7 +666,7 @@ public static class ImGuiX
         ImGui.Text(label);
         ImGui.SameLine();
 
-        var count = "key" + (items.Count > 1 ? "s" : "");
+        var count = "key" + (items.Count is > 1 or 0 ? "s" : "");
         var header = $"Dictionary ({items.Count} {count})##Header_{hash}";
         if (ImGui.CollapsingHeader(header))
         {
