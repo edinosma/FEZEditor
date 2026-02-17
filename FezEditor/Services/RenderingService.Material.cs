@@ -27,22 +27,25 @@ public partial class RenderingService
     
     private readonly Dictionary<Rid, MaterialData> _materials = new();
     
-    public Rid MaterialCreate(Effect? effect = null)
+    public Rid MaterialCreate()
     {
         var rid = AllocateRid(typeof(MaterialData));
-        _materials[rid] = new MaterialData { Effect = new BasicEffect(GraphicsDevice) };
+        _materials[rid] = new MaterialData { Effect = new BasicEffect(GraphicsDevice) { VertexColorEnabled = true } };
         return rid;
     }
 
     public void MaterialReset(Rid material)
     {
         GetResource(_materials, material);  // Validation step
+        _materials[material].Effect.Dispose();
         _materials[material] = new MaterialData { Effect = new BasicEffect(GraphicsDevice) };
     }
 
     public void MaterialAssignEffect(Rid material, Effect effect)
     {
-        GetResource(_materials, material).Effect = effect.Clone();
+        GetResource(_materials, material);  // Validation step
+        _materials[material].Effect.Dispose();
+        _materials[material] = new MaterialData { Effect = effect.Clone() };
     }
 
     public void MaterialAssignBaseTexture(Rid material, Texture2D texture)

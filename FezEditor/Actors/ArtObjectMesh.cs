@@ -36,8 +36,8 @@ public class ArtObjectMesh : ActorComponent
 
     public override void Dispose()
     {
-        _rendering.InstanceSetMesh(Actor.InstanceRid, Rid.Invalid);
-        _rendering.MeshClear(_mesh);
-        _rendering.MaterialReset(_material);
+        GC.SuppressFinalize(this);
+        _rendering.FreeRid(_mesh);
+        _rendering.FreeRid(_material);
     }
 }

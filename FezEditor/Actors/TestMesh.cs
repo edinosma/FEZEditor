@@ -54,4 +54,11 @@ public class TestMesh : ActorComponent
         var rotation = Quaternion.CreateFromAxisAngle(Vector3.Up, _elapsed);
         _rendering.InstanceSetRotation(Actor.InstanceRid, rotation);
     }
+
+    public override void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        _rendering.FreeRid(_material);
+        _rendering.FreeRid(_mesh);
+    }
 }

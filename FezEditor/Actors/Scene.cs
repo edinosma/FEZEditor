@@ -39,6 +39,7 @@ public class Scene : IDisposable
         _rtRid = _rendering.RenderTargetCreate();
         _rootRid = _rendering.WorldGetRoot(_worldRid);
         _rendering.RenderTargetSetWorld(_rtRid, _worldRid);
+        _rendering.RenderTargetSetClearColor(_rtRid, Color.Black);
 
         #endregion
     }

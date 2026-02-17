@@ -34,6 +34,14 @@ public class TrileMesh : ActorComponent
         _multiMesh = _rendering.MeshCreate();
     }
 
+    public override void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        _rendering.FreeRid(_multiMesh);
+        _rendering.FreeRid(_mesh);
+        _rendering.FreeRid(_material);
+    }
+
     public void Load(TrileSet trileSet, int id)
     {
         var effect = Game.Content.Load<Effect>("Effects/Trile");

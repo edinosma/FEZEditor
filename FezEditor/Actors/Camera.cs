@@ -62,4 +62,10 @@ public class Camera : ActorComponent
         _rendering.CameraSetView(_camera, viewMatrix);
         _rendering.CameraSetProjection(_camera, projectionMatrix);
     }
+
+    public override void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        _rendering.FreeRid(_camera);
+    }
 }

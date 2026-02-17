@@ -63,6 +63,7 @@ public class Grid : ActorComponent
     
     public override void Dispose()
     {
+        GC.SuppressFinalize(this);
         foreach (var plane in _planes)
         {
             _rendering.FreeRid(plane.Instance);
