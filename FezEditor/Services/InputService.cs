@@ -9,6 +9,8 @@ namespace FezEditor.Services;
 [UsedImplicitly]
 public class InputService
 {
+    private Point MouseCenter => new(_game.Window.ClientBounds.Width / 2, _game.Window.ClientBounds.Height / 2);
+    
     private readonly Game _game;
 
     private readonly Dictionary<string, List<Binding>> _bindings;
@@ -132,7 +134,16 @@ public class InputService
         _currentMouseState = Mouse.GetState();
         if (_mouseCaptured && _game.IsActive)
         {
-            Mouse.SetPosition(_game.Window.ClientBounds.Width / 2, _game.Window.ClientBounds.Height / 2);
+            _previousMouseState = new MouseState(
+                MouseCenter.X, MouseCenter.Y,
+                _previousMouseState.ScrollWheelValue,
+                _previousMouseState.LeftButton,
+                _previousMouseState.MiddleButton,
+                _previousMouseState.RightButton,
+                _previousMouseState.XButton1,
+                _previousMouseState.XButton2
+            );
+            Mouse.SetPosition(MouseCenter.X, MouseCenter.Y);
         }
     }
 

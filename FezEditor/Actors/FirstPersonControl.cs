@@ -51,8 +51,8 @@ public class FirstPersonControl : ActorComponent
         );
         
         var rotation = _transform.Rotation;
-        var forward = Vector3.Transform(Vector3.Forward, rotation);
-        var right = Vector3.Transform(Vector3.Right, rotation);
+        var forward = Vector3.Transform(Vector3.Backward, rotation);
+        var right = Vector3.Transform(Vector3.Left, rotation);
         if (forward.LengthSquared() > 0) forward.Normalize();
         if (right.LengthSquared() > 0) right.Normalize();
         var direction = (forward * inputDirection.Y + right * inputDirection.X);
