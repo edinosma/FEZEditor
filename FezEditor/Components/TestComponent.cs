@@ -12,7 +12,7 @@ public class TestComponent : EditorComponent
     {
         _test = new Scene(game);
         {
-            var actor = _test.CreateActor();
+            var actor = _test.CreateRootActor();
             var camera = actor.AddComponent<Camera>();
             var transform = actor.GetComponent<Transform>();
             camera.Projection = Camera.ProjectionType.Orthographic;
@@ -21,7 +21,7 @@ public class TestComponent : EditorComponent
             transform.Rotation = Quaternion.Identity;
         }
         {
-            var actor = _test.CreateActor();
+            var actor = _test.CreateRootActor();
             var mesh = actor.AddComponent<TestMesh>();
             mesh.Load();
         }

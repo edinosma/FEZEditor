@@ -48,10 +48,18 @@ public class Scene : IDisposable
         #endregion
     }
 
-    public Actor CreateActor(int id = -1)
+    public Actor CreateRootActor(int id = -1)
     {
         id = id == -1 ? _nextId++ : id;
         var actor = new Actor(_game, _rootRid, id);
+        _actors.Add(id, actor);
+        return actor;
+    }
+
+    public Actor CreateChildActor(Actor parentActor, int id = -1)
+    {
+        id = id == -1 ? _nextId++ : id;
+        var actor = new Actor(_game, parentActor.InstanceRid, id);
         _actors.Add(id, actor);
         return actor;
     }
