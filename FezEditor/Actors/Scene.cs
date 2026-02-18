@@ -8,6 +8,10 @@ namespace FezEditor.Actors;
 
 public class Scene : IDisposable
 {
+    public Color AmbientLight { get; set; } = Color.Gray;
+    
+    public Color DiffuseLight { get; set; } = Color.White;
+    
     private readonly Game _game;
 
     private readonly Rid _rootRid;
@@ -67,6 +71,8 @@ public class Scene : IDisposable
 
     public void Update(GameTime gameTime)
     {
+        _rendering.WorldSetAmbientLight(_worldRid, AmbientLight.ToVector3());
+        _rendering.WorldSetDiffuseLight(_worldRid, DiffuseLight.ToVector3());
         foreach (var actor in _actors.Values)
         {
             actor.Update(gameTime);
