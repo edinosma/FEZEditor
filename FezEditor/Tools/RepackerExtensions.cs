@@ -28,7 +28,7 @@ public static class RepackerExtensions
     {
         var tex2D = new Texture2D(Gd, texture.Width, texture.Height, false, SurfaceFormat.Color);
         var data = new byte[texture.TextureData.Length];
-        Array.Copy(texture.TextureData, data, texture.TextureData.Length);
+        Buffer.BlockCopy(texture.TextureData, 0, data, 0, texture.TextureData.Length);
         tex2D.SetData(data);
         return tex2D;
     }
@@ -37,7 +37,7 @@ public static class RepackerExtensions
     {
         var tex2D = new Texture2D(Gd, texture.AtlasWidth, texture.AtlasHeight, false, SurfaceFormat.Color);
         var data = new byte[texture.TextureData.Length];
-        Array.Copy(texture.TextureData, data, texture.TextureData.Length);
+        Buffer.BlockCopy(texture.TextureData, 0, data, 0, texture.TextureData.Length);
         tex2D.SetData(data);
         return tex2D;
     }
