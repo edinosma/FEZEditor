@@ -160,7 +160,11 @@ public partial class RenderingService : IDisposable
         }
         else if (rid.Type == typeof(MultiMeshData))
         {
-            RemoveResource(_multiMeshes, rid, out _);
+            if (RemoveResource(_multiMeshes, rid, out var mm))
+            {
+                mm!.InstanceBuffer?.Dispose();
+                mm.InstanceDeclaration?.Dispose();
+            }
         }
     }
     
