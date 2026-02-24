@@ -11,6 +11,10 @@ public class TestComponent : EditorComponent
     public TestComponent(Game game, string title) : base(game, title)
     {
         _test = new Scene(game);
+    }
+
+    public override void LoadContent()
+    {
         {
             var actor = _test.CreateActor();
             var camera = actor.AddComponent<Camera>();
@@ -24,11 +28,6 @@ public class TestComponent : EditorComponent
             var actor = _test.CreateActor();
             actor.AddComponent<TestMesh>();
         }
-    }
-
-    public override void LoadContent()
-    {
-        _test.LoadContent();
     }
 
     public override void Update(GameTime gameTime)

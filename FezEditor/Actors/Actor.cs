@@ -17,14 +17,17 @@ public class Actor : IDisposable
     private readonly List<ActorComponent> _components = new();
 
     private readonly Game _game;
+    
+    private readonly IContentManager _content;
 
     private readonly RenderingService _rendering;
 
     private bool _disposed;
 
-    internal Actor(Game game, Rid parentRid)
+    internal Actor(Game game, Rid parentRid, IContentManager content)
     {
         _game = game;
+        _content = content;
         _rendering = game.GetService<RenderingService>();
         InstanceRid = _rendering.InstanceCreate(parentRid);
         Transform = AddComponent<Transform>();
@@ -44,6 +47,7 @@ public class Actor : IDisposable
 
         const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         var component = (T)Activator.CreateInstance(typeof(T), flags, null, new object[] { _game, this }, null)!;
+        component.LoadContent(_content);
         _components.Add(component);
         return component;
     }
@@ -76,14 +80,6 @@ public class Actor : IDisposable
 
         component.Dispose();
         return _components.Remove(component);
-    }
-
-    public void LoadContent(IContentManager content)
-    {
-        foreach (var component in _components)
-        {
-            component.LoadContent(content);
-        }
     }
 
     public void Update(GameTime gameTime)

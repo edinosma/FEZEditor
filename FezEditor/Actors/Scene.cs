@@ -39,7 +39,7 @@ public class Scene : IDisposable
         Lighting = new SceneLighting(game, _worldRid);
 
         var rootRid = _rendering.WorldGetRoot(_worldRid);
-        _root = new Actor(_game, rootRid);
+        _root = new Actor(_game, rootRid, _content);
         _actors.Add(_root);
         _hierarchy[_root] = new HierarchyNode(null, new List<Actor>());
     }
@@ -47,7 +47,7 @@ public class Scene : IDisposable
     public Actor CreateActor(Actor? parent = null)
     {
         var parentActor = parent ?? _root;
-        var actor = new Actor(_game, parentActor.InstanceRid);
+        var actor = new Actor(_game, parentActor.InstanceRid, _content);
         _actors.Add(actor);
         _hierarchy[parentActor].Children.Add(actor);
         _hierarchy[actor] = new HierarchyNode(parentActor, new List<Actor>());
@@ -91,14 +91,6 @@ public class Scene : IDisposable
     public IReadOnlyList<Actor> GetChildren(Actor actor)
     {
         return _hierarchy.TryGetValue(actor, out var node) ? node.Children : [];
-    }
-
-    public void LoadContent()
-    {
-        foreach (var actor in _actors)
-        {
-            actor.LoadContent(_content);
-        }
     }
 
     public void Update(GameTime gameTime)
