@@ -26,6 +26,8 @@ public class MainLayout : DrawableGameComponent
 
     protected override void Dispose(bool disposing)
     {
+        _editorService.CloseAllEditors();
+        _editorService.FlushPendingCloses();
         Game.RemoveComponent(_confirm);
     }
 
