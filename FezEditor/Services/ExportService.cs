@@ -53,10 +53,6 @@ public class ExportService : IDisposable
 
         var rgba = new byte[texture.Width * texture.Height * 4];
         texture.GetData(rgba);
-        for (var i = 3; i < rgba.Length; i += 4)
-        {
-            rgba[i] = (byte)(255 - rgba[i]); // Invert alpha channel
-        }
 
         using var image = Image.LoadPixelData<Rgba32>(rgba, texture.Width, texture.Height);
         var pngPng = Path.ChangeExtension(fullPath, ".tmp.png");
@@ -106,6 +102,15 @@ public class ExportService : IDisposable
             newTexture.SetData(rgba);
             TextureReloaded?.Invoke(assetPath, newTexture);
         }
+    }
+
+    public void EditTexture(string path)
+    {
+        var texture = _exportedTextures[path];
+        using var process = new System.Diagnostics.Process();
+        process.StartInfo.FileName = texture.Path;
+        process.StartInfo.UseShellExecute = true;
+        process.Start();
     }
 
     private void CleanUpOrphanTextures()

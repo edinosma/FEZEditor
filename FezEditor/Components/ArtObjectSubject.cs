@@ -42,7 +42,9 @@ public class ArtObjectSubject : ITrixelSubject
 
     public Texture2D LoadTexture(GraphicsDevice gd)
     {
-        return RepackerExtensions.ConvertToTexture2D(_ao.Cubemap);
+        var texture = RepackerExtensions.ConvertToTexture2D(_ao.Cubemap);
+        RepackerExtensions.SetAlpha(texture, 1f);
+        return texture;
     }
 
     public void UpdateTexture(Texture2D texture)

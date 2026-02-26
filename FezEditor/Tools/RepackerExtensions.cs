@@ -37,6 +37,19 @@ public static class RepackerExtensions
         tex2D.SetData(data);
         return tex2D;
     }
+
+    public static void SetAlpha(in Texture2D texture, float alpha)
+    {
+        var rgba = new byte[texture.Width * texture.Height * 4];
+        texture.GetData(rgba);
+        
+        for (var i = 3; i < rgba.Length; i += 4)
+        {
+            rgba[i] = (byte)(alpha * 255f);
+        }
+
+        texture.SetData(rgba);
+    }
     
     public static Vector2 ToXna(this RVector2 v) => new(v.X, v.Y);
     public static Vector3 ToXna(this RVector3 v) => new(v.X, v.Y, v.Z);

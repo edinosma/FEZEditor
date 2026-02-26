@@ -88,6 +88,8 @@ public class TrileSubject : ITrixelSubject
         
         var tex2D = new Texture2D(gd, TextureWidth, TextureHeight, false, SurfaceFormat.Color);
         tex2D.SetData(slice);
+        RepackerExtensions.SetAlpha(tex2D, 1f);
+        
         return tex2D;
     }
 

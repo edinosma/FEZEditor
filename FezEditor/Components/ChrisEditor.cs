@@ -28,7 +28,9 @@ public class ChrisEditor : EditorComponent
 
     private TrixelObject _obj = null!;
 
-    private bool _showProperties = true;
+    private bool _showProperties;
+
+    private bool _showTexture;
 
     public ChrisEditor(Game game, string title, ArtObject ao) : this(game, title, new ArtObjectSubject(ao))
     {
@@ -72,7 +74,6 @@ public class ChrisEditor : EditorComponent
         }
         
         RevisualizeSubject();
-        ExportTexture();
     }
 
     public override void Update(GameTime gameTime)
@@ -81,6 +82,34 @@ public class ChrisEditor : EditorComponent
     }
 
     public override void Draw()
+    {
+        DrawToolbar();
+        DrawSceneViewport();
+        DrawPropertiesWindow();
+        DrawTextureWindow();
+    }
+
+    private void DrawToolbar()
+    {
+        ImGui.BeginDisabled(_showProperties);
+        if (ImGui.Button($"{Icons.SymbolProperty} Properties"))
+        {
+            _showProperties = true;
+        }
+        ImGui.EndDisabled();
+
+        ImGui.SameLine();
+        ImGui.BeginDisabled(_showTexture);
+        if (ImGui.Button($"{Icons.FileMedia} Texture"))
+        {
+            _showTexture = true;
+        }
+        ImGui.EndDisabled();
+
+        ImGui.Separator();
+    }
+
+    private void DrawSceneViewport()
     {
         var size = ImGuiX.GetContentRegionAvail();
         var w = (int)size.X;
@@ -106,8 +135,6 @@ public class ChrisEditor : EditorComponent
                 }
             }
         }
-
-        DrawPropertiesWindow();
     }
 
     private void DrawPropertiesWindow()
@@ -119,6 +146,68 @@ public class ChrisEditor : EditorComponent
             if (ImGui.Begin($"Properties##{Title}", ref _showProperties, flags))
             {
                 _subject.DrawProperties(History);
+                ImGui.End();
+            }
+        }
+    }
+
+    private void DrawTextureWindow()
+    {
+        if (_showTexture)
+        {
+            const ImGuiWindowFlags flags = ImGuiWindowFlags.NoCollapse;
+            if (ImGui.Begin($"Texture Viewer##{Title}", ref _showTexture, flags))
+            {
+                if (ImGui.Button("Edit Externally"))
+                {
+                    var texture1 = _meshActor.GetComponent<TrixelsMesh>().Texture;
+                    _exportService.ExportTexture(Title, texture1!);
+                    {
+                        _confirm.Title = "Export";
+                        _confirm.Text = $"The texture has been exported to\n'{Title}'";
+                        _confirm.ConfirmButtonText = "Ok";
+                        _confirm.CancelButtonText = "";
+                        _confirm.Confirmed = () => _exportService.EditTexture(Title);
+                    }
+                }
+                
+                var texture = _meshActor.GetComponent<TrixelsMesh>().Texture!;
+                var sizeText = $"Texture Size: {texture.Width}x{texture.Height}px";
+                var textWidth = ImGui.CalcTextSize(sizeText).X;
+                var availWidth = ImGui.GetContentRegionAvail().X;
+                ImGui.SameLine(ImGui.GetCursorPosX() + availWidth - textWidth);
+                ImGui.TextDisabled(sizeText);
+                
+                var availW = ImGuiX.GetContentRegionAvail().X;
+                var scale = availW / texture.Width;
+                var displaySize = new Vector2(texture.Width, texture.Height) * scale;
+                ImGuiX.Image(texture, displaySize);
+                
+                var drawList = ImGui.GetWindowDrawList();
+                var imageMin = ImGuiX.GetItemRectMin();
+                var imageMax = ImGuiX.GetItemRectMax();
+                var colW = displaySize.X / 6f;
+                    
+                var faces = FaceExtensions.NaturalOrder;
+                for (var i = 0; i <= 6; i++)
+                {
+                    var x = imageMin.X + i* colW;
+                    drawList.AddLine(
+                        p1: new NVector2(x, imageMin.Y),
+                        p2: new NVector2(x, imageMax.Y), 
+                        col: new Color(0, 0.5f, 1, 0.5f).PackedValue
+                    );
+                    
+                    if (i < 6)
+                    {
+                        drawList.AddText(
+                            pos: new NVector2(x + 2, imageMin.Y + 2),
+                            col: new Color(0, 0.5f, 1, 1f).PackedValue,
+                            text_begin: faces[i].ToString()
+                        );
+                    }
+                }
+            
                 ImGui.End();
             }
         }
@@ -146,12 +235,6 @@ public class ChrisEditor : EditorComponent
         var zoom = _cameraActor.GetComponent<ZoomControl>();
         zoom.Distance = _obj.Size.X * 2f;
     }
-
-    private void ExportTexture()
-    {
-        var texture = _meshActor.GetComponent<TrixelsMesh>().Texture;
-        _exportService.ExportTexture(Title, texture!);
-    }
     
     private void OnTextureReload(string path, Texture2D newTexture)
     {
@@ -166,7 +249,7 @@ public class ChrisEditor : EditorComponent
         {
             _confirm.Title = "Confirm texture overriding";
             _confirm.Text = $"The texture has been changed externally. Save it to the bundle '{Title}'?";
-            _confirm.Confirmed += () => ResourceService.Save(Title, _subject.GetAsset(_obj));
+            _confirm.Confirmed = () => ResourceService.Save(Title, _subject.GetAsset(_obj));
         }
         
         if (oldTexture != newTexture)
