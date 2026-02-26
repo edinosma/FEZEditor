@@ -7,10 +7,6 @@ namespace FezEditor.Tools;
 
 public static class RepackerExtensions
 {
-    private const int TrileTextureWidth = 108;
-
-    private const int TrileTextureHeight = 18;
-
     public static GraphicsDevice? Gd { private get; set; }
     
     public static MeshSurface ConvertToMesh(VertexInstance[] vertices, ushort[] indices)
@@ -39,24 +35,6 @@ public static class RepackerExtensions
         var data = new byte[texture.TextureData.Length];
         Buffer.BlockCopy(texture.TextureData, 0, data, 0, texture.TextureData.Length);
         tex2D.SetData(data);
-        return tex2D;
-    }
-    
-    public static Texture2D ConvertToTextureAtlas(RTexture2D texture, Vector2 atlasOffset)
-    {
-        var pixelX = (int)MathF.Round(atlasOffset.X * texture.Width);
-        var pixelY = (int)MathF.Round(atlasOffset.Y * texture.Height);
-
-        var atlas = new byte[TrileTextureWidth * TrileTextureHeight * 4];
-        for (var row = 0; row < TrileTextureHeight; row++)
-        {
-            var srcOffset = ((pixelY + row) * texture.Width + pixelX) * 4;
-            var dstOffset = row * TrileTextureWidth * 4;
-            Buffer.BlockCopy(texture.TextureData, srcOffset, atlas, dstOffset, TrileTextureWidth * 4);
-        }
-
-        var tex2D = new Texture2D(Gd, TrileTextureWidth, TrileTextureHeight, false, SurfaceFormat.Color);
-        tex2D.SetData(atlas);
         return tex2D;
     }
     

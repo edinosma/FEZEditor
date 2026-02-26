@@ -10,22 +10,12 @@ public static class TrixelMaterializer
 {
     #region Mesh -> Trixels
 
-    public static TrixelObject Materialize(ArtObject ao)
-    {
-        return ReconstructGeometry(ao.Size.ToXna(), ao.Geometry.Vertices, ao.Geometry.Indices);
-    }
-
-    public static TrixelObject Materialize(Trile trile)
-    {
-        return ReconstructGeometry(trile.Size.ToXna(), trile.Geometry.Vertices, trile.Geometry.Indices);
-    }
-
     /// <summary>
     /// Reconstructs a TrixelObject from an optimized GPU mesh produced by Trile or ArtObject Materializer.
     /// Inverts the forward materialization path: GPU quads -> RectangularTrixelSurfaceParts -> trixel emplacements.
     /// Any trixel not covered by a surface face is marked as missing (subtractive storage).
     /// </summary>
-    private static TrixelObject ReconstructGeometry(Vector3 size, VertexInstance[] vertices, ushort[] indices)
+    public static TrixelObject ReconstructGeometry(Vector3 size, VertexInstance[] vertices, ushort[] indices)
     {
         // Step 1: Extract surface trixels from mesh quads
         var surface = new HashSet<Vector3I>();
@@ -176,21 +166,7 @@ public static class TrixelMaterializer
     
     #region Trixels -> Mesh
 
-    public static ArtObject DematerializeToArtObject(TrixelObject obj)
-    {
-        var ao = new ArtObject { Size = obj.Size.ToRepacker() };
-        (ao.Geometry.Vertices, ao.Geometry.Indices) = Dematerialize(obj);
-        return ao;
-    }
-
-    public static Trile DematerializeToTrile(TrixelObject obj)
-    {
-        var trile = new Trile { Size = obj.Size.ToRepacker() };
-        (trile.Geometry.Vertices, trile.Geometry.Indices) = Dematerialize(obj);
-        return trile;
-    }
-
-    private static (VertexInstance[] Vertices, ushort[] Indices) Dematerialize(TrixelObject obj)
+    public static (VertexInstance[] Vertices, ushort[] Indices) Dematerialize(TrixelObject obj)
     {
         var rects = GreedyMesh(BuildVisibleFaces(obj));
         var offset = obj.Size / 2f;

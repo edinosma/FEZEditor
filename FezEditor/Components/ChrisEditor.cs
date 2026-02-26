@@ -1,7 +1,7 @@
 ﻿using FezEditor.Actors;
 using FezEditor.Structure;
-using FezEditor.Tools;
 using FEZRepacker.Core.Definitions.Game.ArtObject;
+using FEZRepacker.Core.Definitions.Game.TrileSet;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 
@@ -9,9 +9,9 @@ namespace FezEditor.Components;
 
 public class ChrisEditor : EditorComponent
 {
-    public override object Asset => SaveContent();
+    public override object Asset => _subject.GetAsset(_obj);
 
-    private readonly ArtObject _ao;
+    private readonly ITrixelSubject _subject;
     
     private Scene _scene = null!;
 
@@ -20,11 +20,23 @@ public class ChrisEditor : EditorComponent
     private Actor _meshActor = null!;
 
     private TrixelObject _obj = null!;
-    
-    public ChrisEditor(Game game, string title, ArtObject ao) : base(game, title)
+
+    private bool _showProperties = true;
+
+    public ChrisEditor(Game game, string title, ArtObject ao) : this(game, title, new ArtObjectSubject(ao))
     {
-        _ao = ao;
         History.Track(ao);
+    }
+
+    public ChrisEditor(Game game, string title, TrileSet set) : this(game, title, new TrileSubject(set))
+    {
+        History.Track(set);
+    }
+
+    private ChrisEditor(Game game, string title, ITrixelSubject subject) : base(game, title)
+    {
+        _subject = subject;
+        History.StateChanged += RevisualizeSubject;
     }
 
     public override void LoadContent()
@@ -41,7 +53,6 @@ public class ChrisEditor : EditorComponent
 
             camera.Projection = Camera.ProjectionType.Perspective;
             camera.FieldOfView = 90f;
-            zoom.Distance = _ao.Size.X;
             zoom.MinDistance = 10f / 16f;
             zoom.MaxDistance = 16f;
         }
@@ -50,19 +61,7 @@ public class ChrisEditor : EditorComponent
             _meshActor.AddComponent<TrixelsMesh>();
         }
         
-        _obj = TrixelMaterializer.Materialize(_ao);
-        var mesh = _meshActor.GetComponent<TrixelsMesh>();
-        mesh.Texture = RepackerExtensions.ConvertToTexture2D(_ao.Cubemap);
-        mesh.Visualize(_obj);
-    }
-    
-    private object SaveContent()
-    {
-        var ao = TrixelMaterializer.DematerializeToArtObject(_obj);
-        ao.Name = _ao.Name;
-        ao.ActorType = _ao.ActorType;
-        ao.NoSihouette = _ao.NoSihouette;
-        return ao;
+        RevisualizeSubject();
     }
 
     public override void Update(GameTime gameTime)
@@ -96,11 +95,41 @@ public class ChrisEditor : EditorComponent
                 }
             }
         }
+
+        DrawPropertiesWindow();
+    }
+
+    private void DrawPropertiesWindow()
+    {
+        if (_showProperties)
+        {
+            const ImGuiWindowFlags flags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize | 
+                                           ImGuiWindowFlags.NoCollapse;
+            if (ImGui.Begin($"Properties##{Title}", ref _showProperties, flags))
+            {
+                _subject.DrawProperties(History);
+                ImGui.End();
+            }
+        }
     }
 
     public override void Dispose()
     {
         _scene.Dispose();
         base.Dispose();
+    }
+
+    private void RevisualizeSubject()
+    {
+        _obj = _subject.Materialize();
+        
+        var mesh = _meshActor.GetComponent<TrixelsMesh>();
+        var oldTexture = mesh.Texture;
+        mesh.Texture = _subject.LoadTexture(Game.GraphicsDevice);
+        oldTexture?.Dispose();
+        mesh.Visualize(_obj);
+
+        var zoom = _cameraActor.GetComponent<ZoomControl>();
+        zoom.Distance = _obj.Size.X * 2f;
     }
 }
