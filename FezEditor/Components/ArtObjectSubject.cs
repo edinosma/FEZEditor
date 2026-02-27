@@ -66,8 +66,10 @@ public class ArtObjectSubject : ITrixelSubject
         _ao.Cubemap.Height = texture.Height;
     }
 
-    public void DrawProperties(History history)
+    public bool DrawProperties(History history)
     {
+        var revisualize = false;
+        
         var name = _ao.Name;
         if (ImGui.InputText("Name", ref name, 255))
         {
@@ -84,6 +86,7 @@ public class ArtObjectSubject : ITrixelSubject
             {
                 _ao.Size = size.ToRepacker();
                 _resized?.Invoke(size);
+                revisualize = true;
             }
         }
 
@@ -105,5 +108,7 @@ public class ArtObjectSubject : ITrixelSubject
                 _ao.NoSihouette = noSihouette;
             }
         }
+
+        return revisualize;
     }
 }

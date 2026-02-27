@@ -1,4 +1,5 @@
-﻿using FezEditor.Structure;
+﻿using FezEditor.Actors;
+using FezEditor.Structure;
 using FezEditor.Tools;
 using FEZRepacker.Core.Definitions.Game.ArtObject;
 using FEZRepacker.Core.Definitions.Game.Common;
@@ -70,7 +71,7 @@ public class TrileSubject : ITrixelSubject
     {
         _set = set;
         _game = game;
-        _missing = game.Content.Load<Texture2D>("Missing");
+        _missing = game.Content.Load<Texture2D>("Textures/Missing");
         _id = set.Triles
             .OrderBy(kv => kv.Key)
             .First(kv => kv.Value.Geometry.Vertices.Length > 0)
@@ -205,8 +206,10 @@ public class TrileSubject : ITrixelSubject
         return tex2D;
     }
 
-    public void DrawProperties(History history)
+    public bool DrawProperties(History history)
     {
+        var revisualize = false;
+        
         var name = Trile.Name;
         if (ImGui.InputText("Name", ref name, 255))
         {
@@ -223,6 +226,7 @@ public class TrileSubject : ITrixelSubject
             {
                 Trile.Size = size.ToRepacker();
                 _resized?.Invoke(size);
+                revisualize = true;
             }
         }
         
@@ -308,8 +312,11 @@ public class TrileSubject : ITrixelSubject
             using (history.BeginScope("Edit Collision Faces")) 
             {
                 Trile.Faces = collisionFaces.ToDictionary(kv => Enum.Parse<FaceOrientation>(kv.Key), kv => kv.Value);
+                revisualize = true;
             }
         }
+
+        return revisualize;
     }
 
     private static bool RenderFace(string key, ref CollisionType value)
@@ -318,7 +325,9 @@ public class TrileSubject : ITrixelSubject
         ImGui.SameLine();
         var collisionType = (int)value;
         var collisionTypes = Enum.GetNames<CollisionType>();
-        return ImGui.Combo($"##{key}_value", ref collisionType, collisionTypes, collisionTypes.Length);
+        var changed = ImGui.Combo($"##{key}_value", ref collisionType, collisionTypes, collisionTypes.Length);
+        value = (CollisionType)collisionType;
+        return changed;
     }
 
     private static bool AddCollisionType(ref string key)
@@ -329,7 +338,12 @@ public class TrileSubject : ITrixelSubject
         return ImGui.Combo("##item", ref face, faces, faces.Length);
     }
 
-    public IEnumerable<Entry> EnumerateEntries(string filter = "")
+    public Dictionary<FaceOrientation, CollisionType> GetTrileCollision()
+    {
+        return Trile.Faces;
+    }
+
+    public IEnumerable<Entry> EnumerateTriles(string filter = "")
     {
         var ids = _set.Triles.Keys.ToArray();
         foreach (var id in ids)

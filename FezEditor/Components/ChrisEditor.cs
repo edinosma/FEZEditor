@@ -80,6 +80,8 @@ public class ChrisEditor : EditorComponent
         {
             _meshActor = _scene.CreateActor();
             _meshActor.AddComponent<TrixelsMesh>();
+            _meshActor.AddComponent<TrileCollisionMesh>();
+            _meshActor.AddComponent<BoundsMesh>();
         }
         
         RevisualizeSubject();
@@ -140,6 +142,17 @@ public class ChrisEditor : EditorComponent
             _showTexture = true;
         }
         ImGui.EndDisabled();
+
+        if (_subject is TrileSubject)
+        {
+            var collision = _meshActor.GetComponent<TrileCollisionMesh>();
+            var icon = collision.Visible ? Icons.EyeClosed : Icons.Eye;
+            ImGui.SameLine();
+            if (ImGui.Button($"{icon} Collision"))
+            {
+                collision.Visible = !collision.Visible;
+            }
+        }
 
         ImGui.Separator();
     }
@@ -251,7 +264,7 @@ public class ChrisEditor : EditorComponent
 
         if (ImGuiX.BeginChild("##TrileSetList", Vector2.Zero))
         {
-            foreach (var entry in subject.EnumerateEntries(_filterTriles))
+            foreach (var entry in subject.EnumerateTriles(_filterTriles))
             {
                 var toggled = _selectedTriles.Contains(entry.Id);
                 if (ImGui.Checkbox($"##chk_{entry.Id}", ref toggled))
@@ -320,7 +333,10 @@ public class ChrisEditor : EditorComponent
                                            ImGuiWindowFlags.NoCollapse;
             if (ImGui.Begin($"Properties##{Title}", ref _showProperties, flags))
             {
-                _subject.DrawProperties(History);
+                if (_subject.DrawProperties(History))
+                {
+                    RevisualizeSubject();
+                }
                 ImGui.End();
             }
         }
@@ -407,6 +423,15 @@ public class ChrisEditor : EditorComponent
         var mesh = _meshActor.GetComponent<TrixelsMesh>();
         mesh.Texture = _subject.LoadTexture();
         mesh.Visualize(_obj);
+
+        if (_subject is TrileSubject subject)
+        {
+            var collision = _meshActor.GetComponent<TrileCollisionMesh>();
+            collision.Visualize(subject.GetTrileCollision(), _obj.Size);
+        }
+
+        var bounds = _meshActor.GetComponent<BoundsMesh>();
+        bounds.Visualize(_obj.Size);
 
         var zoom = _cameraActor.GetComponent<ZoomControl>();
         zoom.Distance = _obj.Size.X * 2f;

@@ -15,5 +15,5 @@ public interface ITrixelSubject : IDisposable
     
     void UpdateTexture(Texture2D texture);
 
-    void DrawProperties(History history);
+    bool DrawProperties(History history);
 }
