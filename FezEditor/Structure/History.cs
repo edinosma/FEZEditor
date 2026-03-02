@@ -2,7 +2,7 @@
 
 namespace FezEditor.Structure;
 
-public class History
+public class History : IDisposable
 {
     private const int MaxHistorySize = byte.MaxValue;
     
@@ -19,12 +19,32 @@ public class History
     private readonly HashSet<object> _tracked = new();
     
     public bool CanUndo => _undoStack.Count > 0;
+
     public bool CanRedo => _redoStack.Count > 0;
+
     public int UndoCount => _undoStack.Count;
     
     public int RedoCount => _redoStack.Count;
     
     public event Action? StateChanged;
+    
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        foreach (var uo in _undoStack)
+        {
+            uo.States.Clear();
+        }
+
+        foreach (var uo in _redoStack)
+        {
+            uo.States.Clear();
+        }
+        
+        _undoStack.Clear();
+        _redoStack.Clear();
+        _tracked.Clear();
+    }
     
     public void Track(object target)
     {

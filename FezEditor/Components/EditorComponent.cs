@@ -45,6 +45,7 @@ public abstract class EditorComponent
 
     public virtual void Dispose()
     {
+        History.Dispose();
         Game.GetService<ContentService>().Unload(this);
     }
 }
