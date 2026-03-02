@@ -25,6 +25,7 @@ internal class DirResourceProvider : IResourceProvider
         }
 
         _directory = info;
+        TempTextureTracker.CleanOrphans(_directory.FullName);
         Refresh();
     }
 
@@ -40,7 +41,9 @@ internal class DirResourceProvider : IResourceProvider
 
     public string GetFullPath(string path)
     {
-        return _files.GetValueOrDefault(path)?.FullName ?? "";
+        return _files.TryGetValue(path, out var fileInfo)
+            ? fileInfo.FullName
+            : Path.Combine(_directory.FullName, path);
     }
 
     public Stream OpenStream(string path, string extension)

@@ -1,5 +1,4 @@
 ﻿using FezEditor.Actors;
-using FezEditor.Services;
 using FezEditor.Structure;
 using FezEditor.Tools;
 using FEZRepacker.Core.Definitions.Game.ArtObject;
@@ -15,8 +14,6 @@ public partial class ChrisEditor : EditorComponent
     public override object Asset => _subject.GetAsset(_obj);
 
     private readonly ISubject _subject;
-    
-    private readonly ExportService _exportService;
 
     private readonly ConfirmWindow _confirm;
 
@@ -33,6 +30,8 @@ public partial class ChrisEditor : EditorComponent
     private Actor _meshActor = null!;
 
     private TrixelObject _obj = null!;
+
+    private TempTextureTracker? _texture;
 
     private bool _showProperties;
 
@@ -51,8 +50,6 @@ public partial class ChrisEditor : EditorComponent
     private ChrisEditor(Game game, string title, ISubject subject) : base(game, title)
     {
         _subject = subject;
-        _exportService = game.GetService<ExportService>();
-        _exportService.TextureReloaded += OnTextureReload;
         History.StateChanged += RevisualizeSubject;
         Game.AddComponent(_confirm = new ConfirmWindow(game));
     }
@@ -350,16 +347,20 @@ public partial class ChrisEditor : EditorComponent
             ImGuiX.SetNextWindowSize(new Vector2(640, 160), ImGuiCond.Appearing);
             if (ImGui.Begin($"Texture Viewer##{Title}", ref _showTexture, flags))
             {
-                if (ImGui.Button("Edit Externally"))
+                if (!ResourceService.IsReadonly)
                 {
-                    var exportKey = _subject.TextureExportKey;
-                    _exportService.ExportTexture(exportKey, texture);
+                    var exportPath = ResourceService.GetFullPath(_subject.TextureExportKey);
+                    if (ImGui.Button("Edit Externally"))
                     {
-                        _confirm.Title = "Export";
-                        _confirm.Text = $"The texture has been exported to\n'{exportKey}'";
-                        _confirm.ConfirmButtonText = "Ok";
-                        _confirm.CancelButtonText = "";
-                        _confirm.Confirmed = () => _exportService.EditTexture(exportKey);
+                        _texture = new TempTextureTracker(Game, texture, exportPath);
+                        _texture.Changed += OnTextureReload;
+                        {
+                            _confirm.Title = "Export";
+                            _confirm.Text = $"The texture has been exported to\n'{exportPath}'";
+                            _confirm.ConfirmButtonText = "Ok";
+                            _confirm.CancelButtonText = "";
+                            _confirm.Confirmed = () => _texture!.OpenInEditor();
+                        }
                     }
                 }
                 
@@ -407,8 +408,7 @@ public partial class ChrisEditor : EditorComponent
     public override void Dispose()
     {
         Game.RemoveComponent(_confirm);
-        _exportService.TextureReloaded -= OnTextureReload;
-        _exportService.UntrackTexture(_subject.TextureExportKey);
+        _texture?.Dispose();
         _scene.Dispose();
         _subject.Dispose();
         base.Dispose();
@@ -435,10 +435,8 @@ public partial class ChrisEditor : EditorComponent
         zoom.Distance = _obj.Size.X * 2f;
     }
     
-    private void OnTextureReload(string path, Texture2D newTexture)
+    private void OnTextureReload(Texture2D newTexture)
     {
-        if (path != _subject.TextureExportKey) return;
-
         _subject.UpdateTexture(newTexture);
 
         var mesh = _meshActor.GetComponent<TrixelsMesh>();

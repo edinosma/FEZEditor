@@ -24,6 +24,8 @@ public class FezEditor : Game
     private ImGuiService _imGui = null!;
     
     private RenderingService _rendering = null!;
+
+    private ResourceService _resources = null!;
     
     private InputService _input = null!;
     
@@ -65,12 +67,11 @@ public class FezEditor : Game
         _content = this.CreateService<ContentService>();
         _imGui = this.CreateService<ImGuiService>();
         _rendering = this.CreateService<RenderingService>();
-        this.CreateService<ResourceService>();
+        _resources = this.CreateService<ResourceService>();
         _input = this.CreateService<InputService>();
         _editor = this.CreateService<EditorService>();
-        this.CreateService<ExportService>();
-
         Content = (ContentManager)_content.Global;
+
         this.AddComponent(new MenuBar(this));
         this.AddComponent(new FileBrowser(this));
         this.AddComponent(new MainLayout(this));
