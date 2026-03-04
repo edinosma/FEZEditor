@@ -45,6 +45,14 @@
     <Delete Files="@(CompiledShaders)"/>
   </Target>
 
+  <!-- Publish: Copy pkz to publish dir -->
+  <Target Name="PublishContent" AfterTargets="Publish" Condition="'$(Configuration)' == 'Release'">
+    <Copy SourceFiles="$(OutputPath)Content.pkz"
+          DestinationFolder="$(PublishDir)"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(OutputPath)Content.pkz')"/>
+  </Target>
+
   <!-- Clean -->
   <Target Name="CleanBundledContent" AfterTargets="Clean">
     <Delete Files="$(OutputPath)Content.pkz"/>
