@@ -33,8 +33,7 @@ public class FezEditor : Game
 
     private EditorService _editor = null!;
 
-    [STAThread]
-    private static void Main(string[] args)
+    private static void Main()
     {
         Logging.Initialize();
         Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", "OpenGL");

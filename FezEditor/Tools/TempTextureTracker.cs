@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -27,10 +29,18 @@ public sealed class TempTextureTracker : IDisposable
 
     public void OpenInEditor()
     {
-        using var process = new System.Diagnostics.Process();
-        process.StartInfo.FileName = _tempFilePath;
-        process.StartInfo.UseShellExecute = true;
-        process.Start();
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Process.Start(new ProcessStartInfo(_tempFilePath) { UseShellExecute = true });
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            Process.Start("xdg-open", _tempFilePath);
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            Process.Start("open", _tempFilePath);
+        }
     }
 
     public void Dispose()
