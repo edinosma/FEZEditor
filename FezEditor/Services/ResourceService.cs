@@ -95,6 +95,24 @@ public class ResourceService : IDisposable
         return SaveData.Read(stream);
     }
 
+    public Dictionary<string, RAnimatedTexture> LoadAnimations(string path)
+    {
+        var animations = new Dictionary<string, RAnimatedTexture>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var file in _provider!.Files)
+        {
+            if (file.StartsWith(path, StringComparison.OrdinalIgnoreCase) &&
+                !file.Contains("Metadata", StringComparison.OrdinalIgnoreCase))
+            {
+                var name = file[(path.Length + 1)..];
+                var asset = _provider!.Load<RAnimatedTexture>(file);
+                animations.Add(name, asset);
+            }
+        }
+
+        return animations;
+    }
+
     public void Save(string path, object asset)
     {
         if (asset is SaveData saveData)
