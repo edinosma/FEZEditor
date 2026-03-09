@@ -100,6 +100,7 @@ public class ResourceService : IDisposable
             return saveData;
         }
 
+        path = path.Replace('\\', '/');
         var @object = _provider!.Load<object>(path);
         Logger.Information("Loaded - {0} ({1})", path, @object.GetType().Name);
         return @object;

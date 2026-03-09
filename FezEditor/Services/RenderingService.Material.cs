@@ -110,14 +110,14 @@ public partial class RenderingService
     {
         var dss = GetResource(_materials, material).DepthStencilState;
         dss.DepthBufferWriteEnable = enabled;
-        dss.DepthBufferEnable = dss.DepthBufferWriteEnable || dss.DepthBufferFunction != CompareFunction.LessEqual;
+        dss.DepthBufferEnable = dss.DepthBufferWriteEnable || dss.DepthBufferFunction != CompareFunction.Never;
     }
 
     public void MaterialSetDepthTest(Rid material, CompareFunction func)
     {
         var dss = GetResource(_materials, material).DepthStencilState;
         dss.DepthBufferFunction = func;
-        dss.DepthBufferEnable = dss.DepthBufferWriteEnable || dss.DepthBufferFunction != CompareFunction.LessEqual;
+        dss.DepthBufferEnable = dss.DepthBufferWriteEnable || dss.DepthBufferFunction != CompareFunction.Never;
     }
 
     public void MaterialSetStencilTest(Rid material, CompareFunction func, int referenceValue)

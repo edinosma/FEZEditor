@@ -1,0 +1,154 @@
+﻿using FezEditor.Services;
+using FezEditor.Structure;
+using FezEditor.Tools;
+using FEZRepacker.Core.Definitions.Game.Level;
+using FEZRepacker.Core.Definitions.Game.TrileSet;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace FezEditor.Actors;
+
+public class TrilesMesh : ActorComponent
+{
+    private static readonly Quaternion[] PhiAngles = new[]
+    {
+        Quaternion.CreateFromAxisAngle(Vector3.Up, -MathF.Tau / 2f),
+        Quaternion.CreateFromAxisAngle(Vector3.Up, -MathF.Tau / 4f),
+        Quaternion.CreateFromAxisAngle(Vector3.Up, +MathF.Tau * 0f),
+        Quaternion.CreateFromAxisAngle(Vector3.Up, +MathF.Tau / 4f)
+    };
+
+    private static readonly Color SelectedColor = Color.Red with { A = 85 }; // 33%
+
+    private static readonly Color HoveredColor = Color.White with { A = 85 }; // 53%
+
+    private readonly OrderedDictionary<TrileEmplacement, InstanceData> _instances = new();
+
+    private readonly RenderingService _rendering;
+
+    private readonly Rid _mesh;
+
+    private readonly Rid _multiMesh;
+
+    private readonly Rid _material;
+
+    private Texture2D? _texture;
+
+    private TrileEmplacement? _hoveredInstance;
+
+    private HashSet<TrileEmplacement> _selectedInstances = new();
+
+    private bool _instancesDirty;
+
+    internal TrilesMesh(Game game, Actor actor) : base(game, actor)
+    {
+        _rendering = game.GetService<RenderingService>();
+        _mesh = _rendering.MeshCreate();
+        _material = _rendering.MaterialCreate();
+        _multiMesh = _rendering.MultiMeshCreate();
+        _rendering.MultiMeshSetMesh(_multiMesh, _mesh);
+        _rendering.InstanceSetMultiMesh(actor.InstanceRid, _multiMesh);
+    }
+
+    public override void LoadContent(IContentManager content)
+    {
+        var effect = content.Load<Effect>("Effects/TrilesMesh");
+        _rendering.MaterialAssignEffect(_material, effect);
+        _rendering.MaterialShaderSetParam(_material, "Selected", SelectedColor);
+        _rendering.MaterialShaderSetParam(_material, "Hovered", HoveredColor);
+    }
+
+    public override void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        _texture?.Dispose();
+        _rendering.FreeRid(_multiMesh);
+        _rendering.FreeRid(_mesh);
+        _rendering.FreeRid(_material);
+    }
+
+    public void Visualize(TrileSet trileSet, int id)
+    {
+        _texture?.Dispose();
+        _texture = RepackerExtensions.ConvertToTexture2D(trileSet.TextureAtlas);
+        _rendering.MaterialAssignBaseTexture(_material, _texture);
+
+        var trile = trileSet.Triles[id];
+        var surface = RepackerExtensions.ConvertToMesh(trile.Geometry.Vertices, trile.Geometry.Indices);
+        _rendering.MeshAddSurface(_mesh, PrimitiveType.TriangleList, surface, _material);
+    }
+
+    public void SetInstanceData(TrileEmplacement emplacement, Vector3 position, byte phi)
+    {
+        _instances[emplacement] = new InstanceData(position, phi);
+        _instancesDirty = true;
+    }
+
+    public void SetHoveredInstance(TrileEmplacement? emplacement)
+    {
+        _hoveredInstance = emplacement;
+        _instancesDirty = true;
+    }
+
+    public void SetSelectedInstances(HashSet<TrileEmplacement> emplacements)
+    {
+        _selectedInstances = emplacements;
+        _instancesDirty = true;
+    }
+
+    public void ClearInstances()
+    {
+        _instances.Clear();
+        _hoveredInstance = null;
+        _selectedInstances.Clear();
+        _instancesDirty = true;
+    }
+
+    public override void Update(GameTime gameTime)
+    {
+        if (_instancesDirty)
+        {
+            _rendering.MultiMeshAllocate(_multiMesh, _instances.Count, MultiMeshDataType.Matrix);
+            _instancesDirty = false;
+
+            for (var i = 0; i < _instances.Count; i++)
+            {
+                var (emplacement, instance) = _instances.GetAt(i);
+
+                var state = InstanceState.None;
+                if (_hoveredInstance?.Equals(emplacement) ?? false)
+                {
+                    state = InstanceState.Hovered;
+                }
+                else if (_selectedInstances.Contains(emplacement))
+                {
+                    state = InstanceState.Selected;
+                }
+
+                var data = instance.ToStride(state);
+                _rendering.MultiMeshSetInstanceMatrix(_multiMesh, i, data);
+            }
+        }
+    }
+
+    private readonly record struct InstanceData(Vector3 Position, int Phi)
+    {
+        public Matrix ToStride(InstanceState state)
+        {
+            var quaternion = (Phi is >= 0 and <= 3) ? PhiAngles[Phi] : Quaternion.Identity;
+            return new Matrix(
+                Position.X, Position.Y, Position.Z, (float)state,
+                quaternion.X, quaternion.Y, quaternion.Z, quaternion.W,
+                0f, 0f, 0f, 0f,
+                0f, 0f, 0f, 0f
+            );
+        }
+    }
+
+    private enum InstanceState
+    {
+        None,
+        Hovered,
+        Selected
+    }
+}

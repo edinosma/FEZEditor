@@ -36,6 +36,14 @@ public static class Mathz
         );
     }
 
+    public static Quaternion CreateYBillboard(Matrix view, Vector3 position)
+    {
+        var cameraPos = Matrix.Invert(view).Translation;
+        var toCamera = cameraPos - position;
+        var angleY = (float)Math.Atan2(toCamera.X, toCamera.Z);
+        return Quaternion.CreateFromAxisAngle(Vector3.Up, angleY);
+    }
+
     public static BoundingBox ComputeBoundingBox(Vector3 position, Quaternion rotation, Vector3 scale, Vector3 size)
     {
         var halfExtents = size * 0.5f;

@@ -1,5 +1,6 @@
 ﻿using FezEditor.Structure;
 using FEZRepacker.Core.Definitions.Game.ArtObject;
+using FEZRepacker.Core.Definitions.Game.Level;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -81,6 +82,11 @@ public static class RepackerExtensions
         return new Rectangle(r.X, r.Y, r.Width, r.Height);
     }
 
+    public static Vector3I ToXna(this TrileEmplacement t)
+    {
+        return new Vector3I(t.X, t.Y, t.Z);
+    }
+
     public static RVector2 ToRepacker(this Vector2 v)
     {
         return new RVector2(v.X, v.Y);
@@ -109,5 +115,10 @@ public static class RepackerExtensions
     public static RRectangle ToRepacker(this Rectangle r)
     {
         return new RRectangle(r.X, r.Y, r.Width, r.Height);
+    }
+
+    public static TrileEmplacement ToRepacker(this Vector3I v)
+    {
+        return new TrileEmplacement(v.X, v.Y, v.Z);
     }
 }

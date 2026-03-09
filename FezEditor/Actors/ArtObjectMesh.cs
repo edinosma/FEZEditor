@@ -15,6 +15,8 @@ public class ArtObjectMesh : ActorComponent
 
     private readonly Rid _material;
 
+    private Texture2D? _texture;
+
     internal ArtObjectMesh(Game game, Actor actor) : base(game, actor)
     {
         _rendering = game.GetService<RenderingService>();
@@ -25,14 +27,15 @@ public class ArtObjectMesh : ActorComponent
 
     public override void LoadContent(IContentManager content)
     {
-        var effect = content.Load<Effect>("Effects/ArtObject");
+        var effect = content.Load<Effect>("Effects/ArtObjectMesh");
         _rendering.MaterialAssignEffect(_material, effect);
     }
 
     public void Visualize(ArtObject ao)
     {
-        var texture = RepackerExtensions.ConvertToTexture2D(ao.Cubemap);
-        _rendering.MaterialAssignBaseTexture(_material, texture);
+        _texture?.Dispose();
+        _texture = RepackerExtensions.ConvertToTexture2D(ao.Cubemap);
+        _rendering.MaterialAssignBaseTexture(_material, _texture);
 
         var surface = RepackerExtensions.ConvertToMesh(ao.Geometry.Vertices, ao.Geometry.Indices);
         _rendering.MeshClear(_mesh);
@@ -42,6 +45,7 @@ public class ArtObjectMesh : ActorComponent
     public override void Dispose()
     {
         GC.SuppressFinalize(this);
+        _texture?.Dispose();
         _rendering.FreeRid(_mesh);
         _rendering.FreeRid(_material);
     }
