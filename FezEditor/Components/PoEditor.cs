@@ -352,4 +352,16 @@ public class PoEditor : EditorComponent
         AddEntry,
         DeleteEntry
     }
+
+    public static object Create()
+    {
+        var storage = new TextStorage();
+
+        foreach (var language in Enum.GetValues<Language>())
+        {
+            storage[language.GetId()] = new Dictionary<string, string>();
+        }
+
+        return storage;
+    }
 }

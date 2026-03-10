@@ -48,6 +48,18 @@ public static class InputActions
 
     public const string UiQuit = "UiClose";
 
+    public const string FileBrowserRename = "FileBrowserRename";
+
+    public const string FileBrowserDelete = "FileBrowserDelete";
+
+    public const string FileBrowserMove = "FileBrowserMove";
+
+    public const string FileBrowserCopyRelativePath = "FileBrowserCopyRelativePath";
+
+    public const string FileBrowserCopyAbsolutePath = "FileBrowserCopyAbsolutePath";
+
+    public const string FileBrowserOpenInFileManager = "FileBrowserOpenInFileManager";
+
     public const string MoveForward = "MoveForward";
 
     public const string MoveBackward = "MoveBackward";

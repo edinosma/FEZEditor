@@ -1,9 +1,8 @@
-﻿using FezEditor.Tools;
-using FEZRepacker.Core.Conversion;
+﻿using FEZRepacker.Core.Conversion;
 using FEZRepacker.Core.FileSystem;
 using FEZRepacker.Core.XNB;
 
-namespace FezEditor.Services;
+namespace FezEditor.Tools;
 
 internal class DirResourceProvider : IResourceProvider
 {
@@ -110,6 +109,46 @@ internal class DirResourceProvider : IResourceProvider
             using var fileOutputStream = new FileInfo(fileOutputPath).Create();
             outputFile.Data.CopyTo(fileOutputStream);
         }
+    }
+
+    public void Move(string path, string newPath)
+    {
+        foreach (var file in GetBundleFiles(path))
+        {
+            var suffix = file.Name[file.Name.IndexOf('.')..];
+            var dest = Path.Combine(_directory.FullName, newPath.Replace('/', Path.DirectorySeparatorChar) + suffix);
+            Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+            File.Move(file.FullName, dest);
+        }
+    }
+
+    public void Duplicate(string path)
+    {
+        var copyPath = path + " (copy)";
+        foreach (var file in GetBundleFiles(path))
+        {
+            var suffix = file.Name[file.Name.IndexOf('.')..];
+            var dest = Path.Combine(_directory.FullName, copyPath.Replace('/', Path.DirectorySeparatorChar) + suffix);
+            Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+            File.Copy(file.FullName, dest, overwrite: false);
+        }
+    }
+
+    public void Remove(string path)
+    {
+        foreach (var file in GetBundleFiles(path))
+        {
+            File.Delete(file.FullName);
+        }
+    }
+
+    private IEnumerable<FileInfo> GetBundleFiles(string path)
+    {
+        var absolutePath = GetFullPath(path);
+        var dir = Path.GetDirectoryName(absolutePath)!;
+        var fileName = Path.GetFileName(absolutePath);
+        var prefix = fileName[..fileName.IndexOf('.')];
+        return new DirectoryInfo(dir).EnumerateFiles(prefix + ".*");
     }
 
     public void Refresh()

@@ -1,4 +1,4 @@
-﻿namespace FezEditor.Services;
+﻿namespace FezEditor.Tools;
 
 internal interface IResourceProvider : IDisposable
 {
@@ -19,6 +19,12 @@ internal interface IResourceProvider : IDisposable
     T Load<T>(string path) where T : class;
 
     void Save<T>(string path, T asset) where T : class;
+
+    void Move(string path, string newPath);
+
+    void Duplicate(string path);
+
+    void Remove(string path);
 
     void Refresh();
 }

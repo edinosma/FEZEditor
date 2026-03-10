@@ -641,4 +641,15 @@ public class JadeEditor : EditorComponent
         MenuPopup,
         RemoveMapNode
     }
+
+    public static object Create(string name)
+    {
+        return new MapTree
+        {
+            Root = new MapNode
+            {
+                LevelName = name
+            }
+        };
+    }
 }

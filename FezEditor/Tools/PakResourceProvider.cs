@@ -1,7 +1,7 @@
 ﻿using FEZRepacker.Core.FileSystem;
 using FEZRepacker.Core.XNB;
 
-namespace FezEditor.Services;
+namespace FezEditor.Tools;
 
 internal class PakResourceProvider : IResourceProvider
 {
@@ -94,6 +94,18 @@ internal class PakResourceProvider : IResourceProvider
     }
 
     public void Save<T>(string path, T asset) where T : class
+    {
+        throw new NotSupportedException();
+    }
+
+    public void Move(string path, string newPath)
+    {
+        throw new NotSupportedException();
+    }
+
+    public void Duplicate(string path) => throw new NotSupportedException();
+
+    public void Remove(string path)
     {
         throw new NotSupportedException();
     }

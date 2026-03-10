@@ -117,4 +117,19 @@ public partial class ChrisEditor
             return revisualize;
         }
     }
+
+    public static object CreateAo(string name)
+    {
+        return new ArtObject
+        {
+            Name = name,
+            Size = new RVector3(1, 1, 1),
+            Cubemap = new RTexture2D
+            {
+                Width = 16,
+                Height = 16,
+                TextureData = new byte[16 * 16 * 4]
+            }
+        };
+    }
 }

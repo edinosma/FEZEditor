@@ -649,4 +649,36 @@ public partial class ChrisEditor
 
         public readonly record struct Entry(int Id, string Name, Texture2D Texture, Vector2 Uv0, Vector2 Uv1);
     }
+
+    public static object CreateTs(string name)
+    {
+        var trileSet = new TrileSet
+        {
+            Name = name,
+            Triles = new Dictionary<int, Trile>(),
+            TextureAtlas = new RTexture2D
+            {
+                Width = 1024,
+                Height = 32,
+                TextureData = new byte[1024 * 32 * 4]
+            }
+        };
+
+        trileSet.Triles.Add(-1, new Trile
+        {
+            Name = "Trile",
+            CubemapPath = name,
+            AtlasOffset = new RVector2(0, 0),
+            Size = new RVector3(1, 1, 1),
+            Faces = new Dictionary<FaceOrientation, CollisionType>
+            {
+                [FaceOrientation.Front] = CollisionType.None,
+                [FaceOrientation.Right] = CollisionType.None,
+                [FaceOrientation.Back] = CollisionType.None,
+                [FaceOrientation.Left] = CollisionType.None
+            }
+        });
+
+        return trileSet;
+    }
 }

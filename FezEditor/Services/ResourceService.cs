@@ -1,4 +1,5 @@
-﻿using FezEditor.Structure;
+﻿using System.Diagnostics;
+using FezEditor.Structure;
 using FezEditor.Tools;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
@@ -78,6 +79,12 @@ public class ResourceService : IDisposable
         return _provider?.GetFullPath(path) ?? string.Empty;
     }
 
+    public string GetRelativePath(string absolutePath)
+    {
+        var root = GetFullPath(string.Empty);
+        return absolutePath.WithoutBaseDirectory(root).Replace('\\', '/');
+    }
+
     public object Load(string path)
     {
         if (path.Contains("SaveSlot", StringComparison.OrdinalIgnoreCase))
@@ -124,6 +131,48 @@ public class ResourceService : IDisposable
         }
 
         _provider!.Save(path, asset);
+        _provider.Refresh();
+        ProviderChanged?.Invoke();
+    }
+
+    public void Duplicate(string path)
+    {
+        _provider!.Duplicate(path);
+        _provider.Refresh();
+        ProviderChanged?.Invoke();
+    }
+
+    public void Move(string path, string newPath)
+    {
+        _provider!.Move(path, newPath);
+        _provider.Refresh();
+        ProviderChanged?.Invoke();
+    }
+
+    public void Delete(string path)
+    {
+        _provider!.Remove(path);
+        _provider.Refresh();
+        ProviderChanged?.Invoke();
+    }
+
+    public void OpenInFileManager(string path)
+    {
+        var absolutePath = GetFullPath(path);
+        var target = File.Exists(absolutePath) ? absolutePath : Path.GetDirectoryName(absolutePath)!;
+
+        if (OperatingSystem.IsWindows())
+        {
+            Process.Start("explorer.exe", $"/select,\"{target}\"");
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+            Process.Start("open", $"-R \"{target}\"");
+        }
+        else
+        {
+            Process.Start("xdg-open", $"\"{Path.GetDirectoryName(target)}\"");
+        }
     }
 
     public void Dispose()

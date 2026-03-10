@@ -440,4 +440,12 @@ public class DiezEditor : EditorComponent
             _trackedSong.Loops.Insert(to, loop);
         }
     }
+
+    public static object Create(string name)
+    {
+        return new TrackedSong
+        {
+            Name = name
+        };
+    }
 }

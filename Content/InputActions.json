@@ -244,5 +244,53 @@
       "Shift": false,
       "Alt": false
     }
+  ],
+  "FileBrowserRename": [
+    {
+      "Key": "F2",
+      "Ctrl": false,
+      "Shift": false,
+      "Alt": false
+    }
+  ],
+  "FileBrowserDelete": [
+    {
+      "Key": "Delete",
+      "Ctrl": false,
+      "Shift": false,
+      "Alt": false
+    }
+  ],
+  "FileBrowserMove": [
+    {
+      "Key": "D",
+      "Ctrl": true,
+      "Shift": false,
+      "Alt": false
+    }
+  ],
+  "FileBrowserCopyRelativePath": [
+    {
+      "Key": "C",
+      "Ctrl": true,
+      "Shift": true,
+      "Alt": false
+    }
+  ],
+  "FileBrowserCopyAbsolutePath": [
+    {
+      "Key": "C",
+      "Ctrl": true,
+      "Shift": false,
+      "Alt": true
+    }
+  ],
+  "FileBrowserOpenInFileManager": [
+    {
+      "Key": "R",
+      "Ctrl": true,
+      "Shift": false,
+      "Alt": true
+    }
   ]
 }

@@ -866,4 +866,17 @@ public class ZuEditor : EditorComponent
     }
 
     #endregion
+
+    public static object Create()
+    {
+        return new FezFont
+        {
+            Texture = new RTexture2D
+            {
+                Width = 64,
+                Height = 64,
+                TextureData = new byte[64 * 64 * 4]
+            }
+        };
+    }
 }

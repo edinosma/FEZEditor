@@ -12,6 +12,8 @@ public class FileBrowser : DrawableGameComponent
 
     private FileNode? _selected;
 
+    private FileNode? _hoveredDir;
+
     private string _path = "";
 
     private Dirty<string> _filter = new("");
@@ -30,6 +32,12 @@ public class FileBrowser : DrawableGameComponent
 
     private readonly ResourceService _resourceService;
 
+    private readonly InputService _inputService;
+
+    private readonly EditWindow _editWindow;
+
+    private readonly ConfirmWindow _confirmWindow;
+
     private enum SortMode
     {
         NameAscending,
@@ -42,7 +50,54 @@ public class FileBrowser : DrawableGameComponent
     {
         _editorService = game.GetService<EditorService>();
         _resourceService = game.GetService<ResourceService>();
+        _inputService = game.GetService<InputService>();
         _resourceService.ProviderChanged += UpdateNodeTree;
+        game.AddComponent(_editWindow = new EditWindow(game));
+        game.AddComponent(_confirmWindow = new ConfirmWindow(game));
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        Game.RemoveComponent(_confirmWindow);
+        Game.RemoveComponent(_editWindow);
+        base.Dispose(disposing);
+    }
+
+    public override void Update(GameTime gameTime)
+    {
+        if (_selected == null || _resourceService.IsReadonly)
+        {
+            return;
+        }
+
+        var relativePath = _selected == _root
+            ? string.Empty
+            : _selected.Path[(_root!.Path.Length + 1)..];
+
+        if (_inputService.IsActionJustPressed(InputActions.FileBrowserRename))
+        {
+            ShowRenameDialog(relativePath);
+        }
+        else if (_inputService.IsActionJustPressed(InputActions.FileBrowserDelete))
+        {
+            ShowDeleteDialog(relativePath);
+        }
+        else if (_inputService.IsActionJustPressed(InputActions.FileBrowserMove))
+        {
+            ShowMoveDialog(relativePath);
+        }
+        else if (_inputService.IsActionJustPressed(InputActions.FileBrowserCopyRelativePath))
+        {
+            ImGui.SetClipboardText(relativePath);
+        }
+        else if (_inputService.IsActionJustPressed(InputActions.FileBrowserCopyAbsolutePath))
+        {
+            ImGui.SetClipboardText(_resourceService.GetFullPath(relativePath));
+        }
+        else if (_inputService.IsActionJustPressed(InputActions.FileBrowserOpenInFileManager))
+        {
+            _resourceService.OpenInFileManager(relativePath);
+        }
     }
 
     public void Draw()
@@ -184,12 +239,20 @@ public class FileBrowser : DrawableGameComponent
                 _path = "";
             }
 
+            if (ImGui.BeginPopupContextWindow("##EmptySpaceContext",
+                    ImGuiPopupFlags.MouseButtonRight | ImGuiPopupFlags.NoOpenOverItems))
+            {
+                DrawContextMenu(_hoveredDir ?? _root, flatten: true);
+                ImGui.EndPopup();
+            }
+
             var filtering = !string.IsNullOrEmpty(_filter);
             if (filtering)
             {
                 UpdateFilterMatches(_root);
             }
 
+            _hoveredDir = null;
             _tree.Clear();
             _tree.Push((_root, false));
 
@@ -257,6 +320,11 @@ public class FileBrowser : DrawableGameComponent
                             _openDirs.Remove(node);
                         }
                     }
+
+                    if (nodeOpen && ImGui.IsItemHovered())
+                    {
+                        _hoveredDir = node;
+                    }
                 }
 
                 if (ImGui.IsItemClicked())
@@ -289,20 +357,11 @@ public class FileBrowser : DrawableGameComponent
                     }
                 }
 
-                // if (ImGui.BeginPopupContextItem())
-                // {
-                //     if (ImGui.MenuItem("Open"))
-                //     {
-                //         /* ... */
-                //     }
-                //
-                //     if (ImGui.MenuItem("Delete"))
-                //     {
-                //         /* ... */
-                //     }
-                //
-                //     ImGui.EndPopup();
-                // }
+                if (ImGui.BeginPopupContextItem())
+                {
+                    DrawContextMenu(node, flatten: false);
+                    ImGui.EndPopup();
+                }
 
                 if (node.IsDirectory && nodeOpen)
                 {
@@ -319,6 +378,151 @@ public class FileBrowser : DrawableGameComponent
         }
 
         ImGui.EndChild();
+    }
+
+    private void DrawContextMenu(FileNode node, bool flatten)
+    {
+        if (_resourceService.IsReadonly)
+        {
+            return;
+        }
+
+        var relativePath = node == _root ? string.Empty : node.Path[(_root!.Path.Length + 1)..];
+        if (flatten)
+        {
+            DrawNewAssetMenuItems("New ", relativePath);
+        }
+        else
+        {
+            if (ImGui.BeginMenu($"{Icons.FileAdd} Create New Asset..."))
+            {
+                DrawNewAssetMenuItems(string.Empty, relativePath);
+                ImGui.EndMenu();
+            }
+
+            var shortcut = _inputService.GetActionBinding(InputActions.FileBrowserCopyRelativePath);
+            if (ImGui.MenuItem($"{Icons.Copy} Copy Relative Path", shortcut))
+            {
+                ImGui.SetClipboardText(relativePath);
+            }
+
+            shortcut = _inputService.GetActionBinding(InputActions.FileBrowserCopyAbsolutePath);
+            if (ImGui.MenuItem("\tCopy Absolute Path", shortcut))
+            {
+                ImGui.SetClipboardText(_resourceService.GetFullPath(relativePath));
+            }
+
+            ImGui.Separator();
+            shortcut = _inputService.GetActionBinding(InputActions.FileBrowserRename);
+            if (ImGui.MenuItem($"{Icons.Rename} Rename", shortcut))
+            {
+                ShowRenameDialog(relativePath);
+            }
+
+            if (ImGui.MenuItem($"{Icons.Copy} Duplicate"))
+            {
+                _resourceService.Duplicate(relativePath);
+            }
+
+            shortcut = _inputService.GetActionBinding(InputActions.FileBrowserMove);
+            if (ImGui.MenuItem($"{Icons.Move} Move", shortcut))
+            {
+                ShowMoveDialog(relativePath);
+            }
+
+            shortcut = _inputService.GetActionBinding(InputActions.FileBrowserDelete);
+            if (ImGui.MenuItem($"{Icons.Remove} Delete", shortcut))
+            {
+                ShowDeleteDialog(relativePath);
+            }
+        }
+
+        ImGui.Separator();
+
+        var openShortcut = _inputService.GetActionBinding(InputActions.FileBrowserOpenInFileManager);
+        if (ImGui.MenuItem($"{Icons.FolderOpened} Open in File Manager", openShortcut))
+        {
+            _resourceService.OpenInFileManager(relativePath);
+        }
+    }
+
+    private void DrawNewAssetMenuItems(string prefix, string basePath)
+    {
+        foreach (var (name, type) in EditorService.GetAssetTypes())
+        {
+            if (ImGui.MenuItem(prefix + name))
+            {
+                ShowCreateDialog(basePath, type);
+            }
+        }
+    }
+
+    private void ShowCreateDialog(string basePath, Type assetType)
+    {
+        const string defaultName = "UNTITLED";
+
+        var absoluteDir = _resourceService.GetFullPath(basePath);
+        var extension = EditorService.GetExtensionForType(assetType);
+        var options = new FileDialog.Options
+        {
+            DefaultLocation = Path.Combine(absoluteDir, defaultName),
+            Title = "Create New " + assetType.Name,
+            Filters = [new FileDialog.Filter(assetType.Name, extension)]
+        };
+
+        FileDialog.Show(FileDialog.Type.SaveFile, result =>
+        {
+            if (result.Files.Length != 0)
+            {
+                var relativePath = _resourceService.GetRelativePath(result.Files[0]);
+                var asset = EditorService.CreateAssetOfType(assetType, defaultName);
+                _resourceService.Save(relativePath, asset);
+            }
+        }, options);
+    }
+
+    private void ShowRenameDialog(string path)
+    {
+        var newName = Path.GetFileName(path);
+        _editWindow.Title = "Rename";
+        _editWindow.Text = "Enter a new name:";
+        _editWindow.EditValue = () =>
+        {
+            ImGui.InputText("##RenameInput", ref newName, 256);
+            return !string.IsNullOrWhiteSpace(newName) && newName != Path.GetFileName(path);
+        };
+        _editWindow.Accepted = () =>
+        {
+            var dir = path.Contains('/') ? path[..path.LastIndexOf('/')] : string.Empty;
+            var newPath = string.IsNullOrEmpty(dir) ? newName : $"{dir}/{newName}";
+            _resourceService.Move(path, newPath);
+        };
+    }
+
+    private void ShowMoveDialog(string path)
+    {
+        var options = new FileDialog.Options
+        {
+            DefaultLocation = _resourceService.GetFullPath(string.Empty),
+            Title = "Move to folder"
+        };
+
+        FileDialog.Show(FileDialog.Type.OpenFolder, result =>
+        {
+            if (result.Files.Length != 0)
+            {
+                var targetDir = _resourceService.GetRelativePath(result.Files[0]);
+                var fileName = path.Contains('/') ? path[(path.LastIndexOf('/') + 1)..] : path;
+                var newPath = string.IsNullOrEmpty(targetDir) ? fileName : $"{targetDir}/{fileName}";
+                _resourceService.Move(path, newPath);
+            }
+        }, options);
+    }
+
+    private void ShowDeleteDialog(string relativePath)
+    {
+        _confirmWindow.Text = $"Delete \"{Path.GetFileName(relativePath)}\"?";
+        _confirmWindow.Confirmed = () => _resourceService.Delete(relativePath);
     }
 
     private bool UpdateFilterMatches(FileNode node)
