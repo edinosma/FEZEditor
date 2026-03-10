@@ -607,7 +607,7 @@ public partial class ChrisEditor : EditorComponent
         }
 
         var bounds = _meshActor.GetComponent<BoundsMesh>();
-        bounds.Visualize(_obj.Size);
+        bounds.Size = _obj.Size;
     }
 
     private void OnTextureReload(Texture2D newTexture)
