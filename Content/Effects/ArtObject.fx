@@ -13,17 +13,19 @@ struct VS_OUTPUT
 {
     float4 Position : POSITION0;
     float3 Normal : TEXCOORD0;
-    float2 TexCoord : TEXCOORD1;
+    float Fog : TEXCOORD1;
+    float2 TexCoord : TEXCOORD2;
 };
 
 VS_OUTPUT VS(VS_INPUT input)
 {
     VS_OUTPUT output;
-    
+
     float4 worldViewPos = TransformPositionToClip(input.Position);
     output.Position = ApplyTexelOffset(worldViewPos);
     output.Normal = input.Normal;
     output.TexCoord = input.TexCoord;
+    output.Fog = saturate(1.0 - ApplyFog(output.Position.w));
 
     return output;
 }
@@ -31,9 +33,10 @@ VS_OUTPUT VS(VS_INPUT input)
 float4 PS(VS_OUTPUT input) : COLOR0
 {
     float4 texColor = SAMPLE_TEXTURE(BaseTexture, input.TexCoord);
-    
+
     float3 color = texColor.rgb;
-    color *= ComputeLight(input.Normal, texColor.a);
+    color *= ComputeLight(input.Normal, 0.0);
+    color = lerp(color, Fog_Color, input.Fog);
 
     return float4(color, 1.0);
 }
