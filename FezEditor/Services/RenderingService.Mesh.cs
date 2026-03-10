@@ -99,7 +99,7 @@ public partial class RenderingService
                 ApplyMaterialState(mat);
                 if (mat.Effect is BasicEffect)
                 {
-                    UpdateBasicEffect(mat, matrices);
+                    UpdateBasicEffect(world, mat, matrices);
                 }
                 else if (mat.Effect != null)
                 {

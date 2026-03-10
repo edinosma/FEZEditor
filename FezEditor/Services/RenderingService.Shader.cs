@@ -87,7 +87,7 @@ public partial class RenderingService
         return parameter;
     }
 
-    private static void UpdateBasicEffect(MaterialData material, InstanceMatrices matrices)
+    private static void UpdateBasicEffect(WorldData world, MaterialData material, InstanceMatrices matrices)
     {
         var effect = (BasicEffect)material.Effect!;
         effect.World = matrices.World;
@@ -95,11 +95,21 @@ public partial class RenderingService
         effect.Projection = matrices.Projection;
         effect.DiffuseColor = material.Albedo.ToVector3();
         effect.Alpha = material.Albedo.A / 255f;
+
         effect.TextureEnabled = false;
         if (material.Texture != null)
         {
             effect.TextureEnabled = true;
             effect.Texture = material.Texture;
+        }
+
+        effect.FogEnabled = false;
+        if (world.FogType != FogType.None)
+        {
+            effect.FogEnabled = true;
+            effect.FogColor = world.FogColor.ToVector3();
+            effect.FogStart = 0f;
+            effect.FogEnd = 1f / world.FogDensity;
         }
     }
 
