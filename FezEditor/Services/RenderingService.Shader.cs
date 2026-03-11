@@ -18,7 +18,8 @@ public partial class RenderingService
         typeof(Matrix),
         typeof(Color),
         typeof(Vector4[]),
-        typeof(Matrix[])
+        typeof(Matrix[]),
+        typeof(Texture2D)
     };
 
     private static readonly Dictionary<Type, Func<EffectParameter, int, object>> GetParameterFunctions = new()
@@ -37,7 +38,8 @@ public partial class RenderingService
             return new Color(v.X, v.Y, v.Z, v.W);
         },
         [typeof(Vector4[])] = (ep, i) => ep.GetValueVector4Array(i),
-        [typeof(Matrix[])] = (ep, i) => ep.GetValueMatrixArray(i)
+        [typeof(Matrix[])] = (ep, i) => ep.GetValueMatrixArray(i),
+        [typeof(Texture2D)] = (ep, _) => ep.GetValueTexture2D()
     };
 
     private static readonly Dictionary<Type, Action<EffectParameter, object>> SetParameterFunctions = new()
@@ -52,7 +54,8 @@ public partial class RenderingService
         [typeof(Matrix)] = (ep, v) => ep.SetValue((Matrix)v),
         [typeof(Color)] = (ep, v) => ep.SetValue(((Color)v).ToVector4()),
         [typeof(Vector4[])] = (ep, v) => ep.SetValue((Vector4[])v),
-        [typeof(Matrix[])] = (ep, v) => ep.SetValue((Matrix[])v)
+        [typeof(Matrix[])] = (ep, v) => ep.SetValue((Matrix[])v),
+        [typeof(Texture2D)] = (ep, v) => ep.SetValue((Texture2D)v)
     };
 
     public T MaterialShaderGetParam<T>(Rid material, string name, int count = 0)

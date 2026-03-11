@@ -10,7 +10,7 @@ namespace FezEditor.Actors;
 
 public class TrileCollisionMesh : ActorComponent
 {
-    private const float ZFightingOffset = 1.01f;
+    private const float OverlayOversize = 1.025f;
 
     private static readonly FaceOrientation[] Sides = new[]
     {
@@ -26,65 +26,111 @@ public class TrileCollisionMesh : ActorComponent
         set => _rendering.InstanceSetVisibility(_instance, value);
     }
 
+    private readonly List<InstanceData> _instances = new();
+
     private readonly RenderingService _rendering;
 
     private readonly Rid _instance;
 
     private readonly Rid _mesh;
 
-    private readonly Dictionary<FaceOrientation, Rid> _materials = new();
+    private readonly Rid _multiMesh;
 
-    private readonly Dictionary<CollisionType, Texture2D> _textures = new();
+    private readonly Rid _material;
+
+    private bool _instancesDirty;
 
     public TrileCollisionMesh(Game game, Actor actor) : base(game, actor)
     {
         _rendering = game.GetService<RenderingService>();
         _instance = _rendering.InstanceCreate(actor.InstanceRid);
         _mesh = _rendering.MeshCreate();
-        _rendering.InstanceSetMesh(_instance, _mesh);
+        _material = _rendering.MaterialCreate();
+        _multiMesh = _rendering.MultiMeshCreate();
+        _rendering.MultiMeshSetMesh(_multiMesh, _mesh);
+        _rendering.InstanceSetMultiMesh(_instance, _multiMesh);
         _rendering.InstanceSetVisibility(_instance, false);
     }
 
     public override void Dispose()
     {
         GC.SuppressFinalize(this);
-        foreach (var material in _materials.Values)
-        {
-            _rendering.FreeRid(material);
-        }
-
+        _rendering.FreeRid(_material);
+        _rendering.FreeRid(_multiMesh);
         _rendering.FreeRid(_mesh);
         _rendering.FreeRid(_instance);
     }
 
     public override void LoadContent(IContentManager content)
     {
-        foreach (var face in Sides)
-        {
-            var effect = new BasicEffect(_rendering.GraphicsDevice);
-            var material = _rendering.MaterialCreate();
-            _rendering.MaterialAssignEffect(material, effect);
-            _rendering.MaterialSetCullMode(material, CullMode.None);
-            _rendering.MaterialSetAlbedo(material, Color.White with { A = 204 }); // 80%
-            _materials[face] = material;
-        }
+        var effect = content.Load<Effect>("Effects/TrileCollisionMesh");
+        _rendering.MaterialAssignEffect(_material, effect);
+        _rendering.MaterialSetCullMode(_material, CullMode.None);
+        _rendering.MaterialSetAlbedo(_material, Color.White with { A = 102 }); // 40%
 
         foreach (var collision in Enum.GetValues<CollisionType>())
         {
-            _textures[collision] = content.Load<Texture2D>($"Textures/{collision}");
+            var texture = content.Load<Texture2D>($"Textures/{collision}");
+            _rendering.MaterialShaderSetParam(_material, $"{collision}Texture", texture);
+        }
+
+        var quad = MeshSurface.CreateQuad(Vector3.One);
+        _rendering.MeshAddSurface(_mesh, PrimitiveType.TriangleList, quad, _material);
+    }
+
+    public void AddInstanceData(Vector3 position, Dictionary<FaceOrientation, CollisionType> collision, Vector3 size)
+    {
+        position += size / 2f;
+        size *= OverlayOversize;
+
+        foreach (var face in Sides)
+        {
+            if (!collision.TryGetValue(face, out var type))
+            {
+                throw new KeyNotFoundException($"Missing {face} face");
+            }
+
+            _instances.Add(new InstanceData(position, size, face, type));
+            _instancesDirty = true;
         }
     }
 
-    public void Visualize(Dictionary<FaceOrientation, CollisionType> collisionFaces, Vector3 size)
+    public void ClearInstanceData()
     {
-        _rendering.InstanceSetPosition(_instance, size / 2f);
-        _rendering.MeshClear(_mesh);
+        _instances.Clear();
+        _instancesDirty = true;
+    }
 
-        foreach (var (face, collision) in collisionFaces)
+    public override void Update(GameTime gameTime)
+    {
+        if (_instancesDirty)
         {
-            var surface = MeshSurface.CreateFaceQuad(size * ZFightingOffset, face);
-            _rendering.MeshAddSurface(_mesh, PrimitiveType.TriangleList, surface, _materials[face]);
-            _rendering.MaterialAssignBaseTexture(_materials[face], _textures[collision]);
+            _rendering.MultiMeshAllocate(_multiMesh, _instances.Count, MultiMeshDataType.Matrix);
+            _instancesDirty = false;
+
+            for (var i = 0; i < _instances.Count; i++)
+            {
+                var data = _instances[i].ToStride();
+                _rendering.MultiMeshSetInstanceMatrix(_multiMesh, i, data);
+            }
+        }
+    }
+
+    private readonly record struct InstanceData(
+        Vector3 Position,
+        Vector3 Size,
+        FaceOrientation Face,
+        CollisionType CollisionType)
+    {
+        public Matrix ToStride()
+        {
+            var rotation = Face.AsQuaternion();
+            return new Matrix(
+                Position.X, Position.Y, Position.Z, 0f,
+                rotation.X, rotation.Y, rotation.Z, rotation.W,
+                Size.X, Size.Y, Size.Z, (float)CollisionType,
+                0f, 0f, 0f, 0f
+            );
         }
     }
 }

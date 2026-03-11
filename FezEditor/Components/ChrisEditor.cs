@@ -606,7 +606,8 @@ public partial class ChrisEditor : EditorComponent
         if (_subject is TrileSetSubject subject)
         {
             var collision = _meshActor.GetComponent<TrileCollisionMesh>();
-            collision.Visualize(subject.GetTrileCollision(), _obj.Size);
+            collision.ClearInstanceData();
+            collision.AddInstanceData(Vector3.Zero, subject.GetTrileCollision(), _obj.Size);
         }
 
         var bounds = _meshActor.GetComponent<BoundsMesh>();
