@@ -1,4 +1,5 @@
-﻿using FezEditor.Structure;
+﻿using System.Runtime.InteropServices;
+using FezEditor.Structure;
 using FezEditor.Tools;
 using FEZRepacker.Core.Definitions.Game.ArtObject;
 using FEZRepacker.Core.Definitions.Game.Common;
@@ -27,13 +28,13 @@ public partial class ChrisEditor
 
         private const int AtlasFaceSize = 18;
 
-        private const int AtlasTrileWidth = AtlasFaceSize * FaceCount;
+        public const int AtlasTrileWidth = AtlasFaceSize * FaceCount;
 
-        private const int AtlasTrileHeight = AtlasFaceSize;
+        public const int AtlasTrileHeight = AtlasFaceSize;
 
-        private const int AtlasWidth = 1024;
+        public const int AtlasWidth = 1024;
 
-        private const int AtlasStartingHeight = 32;
+        public const int AtlasStartingHeight = 32;
 
         private const int AtlasColumns = AtlasWidth / AtlasTrileWidth;
 
@@ -145,31 +146,7 @@ public partial class ChrisEditor
 
             #endregion
 
-            #region Apply Atlas Offset to TexCoords
-
-            var atlasW = _set.TextureAtlas.Width;
-            var atlasH = _set.TextureAtlas.Height;
-
-            foreach (var trile1 in _set.Triles.Values)
-            {
-                foreach (var vertex in trile1.Geometry.Vertices)
-                {
-                    // Vertex U is in [0,1] spanning all 6 faces packed without borders.
-                    // Map each face's [f/6, (f+1)/6] range into atlas space, inserting per-face borders.
-                    var u = vertex.TextureCoordinate.X;
-                    var faceIndex = Math.Clamp((int)(u * FaceCount), 0, FaceCount - 1);
-                    var uWithinFace = (u * FaceCount) - faceIndex;
-
-                    var faceAtlasX = trile1.AtlasOffset.X + (((faceIndex * AtlasFaceSize) + 1f) / atlasW);
-                    var mappedU = faceAtlasX + (uWithinFace * FaceSize / atlasW);
-                    var mappedV = trile1.AtlasOffset.Y + (1f / atlasH) +
-                                  (vertex.TextureCoordinate.Y * FaceSize / atlasH);
-
-                    vertex.TextureCoordinate = new RVector2(mappedU, mappedV);
-                }
-            }
-
-            #endregion
+            ApplyAtlasOffsets(_set);
 
             return _set;
         }
@@ -449,6 +426,31 @@ public partial class ChrisEditor
             }
         }
 
+        public static void ApplyAtlasOffsets(TrileSet set)
+        {
+            var atlasW = set.TextureAtlas.Width;
+            var atlasH = set.TextureAtlas.Height;
+
+            foreach (var trile in set.Triles.Values)
+            {
+                foreach (var vertex in trile.Geometry.Vertices)
+                {
+                    // Vertex U is in [0,1] spanning all 6 faces packed without borders.
+                    // Map each face's [f/6, (f+1)/6] range into atlas space, inserting per-face borders.
+                    var u = vertex.TextureCoordinate.X;
+                    var faceIndex = Math.Clamp((int)(u * FaceCount), 0, FaceCount - 1);
+                    var uWithinFace = (u * FaceCount) - faceIndex;
+
+                    var faceAtlasX = trile.AtlasOffset.X + (((faceIndex * AtlasFaceSize) + 1f) / atlasW);
+                    var mappedU = faceAtlasX + (uWithinFace * FaceSize / atlasW);
+                    var mappedV = trile.AtlasOffset.Y + (1f / atlasH) +
+                                  (vertex.TextureCoordinate.Y * FaceSize / atlasH);
+
+                    vertex.TextureCoordinate = new RVector2(mappedU, mappedV);
+                }
+            }
+        }
+
         private static void RebuildAtlas(TrileSet set, Dictionary<int, byte[]> overrides)
         {
             var rows = (int)MathF.Ceiling((float)set.Triles.Count / AtlasColumns);
@@ -652,19 +654,29 @@ public partial class ChrisEditor
 
     public static object CreateTs(string name)
     {
+        var colors = new Color[TrileSetSubject.AtlasWidth * TrileSetSubject.AtlasStartingHeight];
+        Array.Fill(colors, Color.Black);
+        for (var row = 0; row < TrileSetSubject.AtlasTrileHeight; row++)
+        {
+            for (var col = 0; col < TrileSetSubject.AtlasTrileWidth; col++)
+            {
+                colors[(row * TrileSetSubject.AtlasWidth) + col] = Color.White;
+            }
+        }
+
         var trileSet = new TrileSet
         {
             Name = name,
             Triles = new Dictionary<int, Trile>(),
             TextureAtlas = new RTexture2D
             {
-                Width = 1024,
-                Height = 32,
-                TextureData = new byte[1024 * 32 * 4]
+                Width = TrileSetSubject.AtlasWidth,
+                Height = TrileSetSubject.AtlasStartingHeight,
+                TextureData = MemoryMarshal.AsBytes(colors.AsSpan()).ToArray()
             }
         };
 
-        trileSet.Triles.Add(-1, new Trile
+        var trile = new Trile
         {
             Name = "Trile",
             CubemapPath = name,
@@ -677,7 +689,12 @@ public partial class ChrisEditor
                 [FaceOrientation.Back] = CollisionType.None,
                 [FaceOrientation.Left] = CollisionType.None
             }
-        });
+        };
+
+        var obj = new TrixelObject(Vector3.One);
+        (trile.Geometry.Vertices, trile.Geometry.Indices) = TrixelMaterializer.Dematerialize(obj);
+        TrileSetSubject.ApplyAtlasOffsets(trileSet);
+        trileSet.Triles.Add(0, trile);
 
         return trileSet;
     }

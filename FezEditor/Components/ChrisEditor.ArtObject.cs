@@ -1,4 +1,5 @@
-﻿using FezEditor.Structure;
+﻿using System.Runtime.InteropServices;
+using FezEditor.Structure;
 using FezEditor.Tools;
 using FEZRepacker.Core.Definitions.Game.ArtObject;
 using FEZRepacker.Core.Definitions.Game.Common;
@@ -120,16 +121,27 @@ public partial class ChrisEditor
 
     public static object CreateAo(string name)
     {
-        return new ArtObject
+        const int trileWidth = (int)(1 / Mathz.TrixelSize);
+        const int trileHeight = (int)(1 / Mathz.TrixelSize);
+
+        var ao = new ArtObject
         {
             Name = name,
             Size = new RVector3(1, 1, 1),
             Cubemap = new RTexture2D
             {
-                Width = 16,
-                Height = 16,
-                TextureData = new byte[16 * 16 * 4]
+                Width = trileWidth,
+                Height = trileHeight
             }
         };
+
+        var colors = new Color[trileWidth * trileHeight];
+        Array.Fill(colors, Color.White);
+        ao.Cubemap.TextureData = MemoryMarshal.AsBytes(colors.AsSpan()).ToArray();
+
+        var obj = new TrixelObject(Vector3.One);
+        (ao.Geometry.Vertices, ao.Geometry.Indices) = TrixelMaterializer.Dematerialize(obj);
+
+        return ao;
     }
 }
