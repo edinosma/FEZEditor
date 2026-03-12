@@ -33,7 +33,7 @@ git submodule update --init
 
 ### Prerequisites
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9)
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 - `fxc.exe` for shader compilation (see below)
 
 ### Shader Compiler (fxc.exe)
