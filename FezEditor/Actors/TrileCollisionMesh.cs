@@ -66,6 +66,7 @@ public class TrileCollisionMesh : ActorComponent
         var effect = content.Load<Effect>("Effects/TrileCollisionMesh");
         _rendering.MaterialAssignEffect(_material, effect);
         _rendering.MaterialSetCullMode(_material, CullMode.None);
+        _rendering.MaterialSetDepthWrite(_material, false);
         _rendering.MaterialSetAlbedo(_material, Color.White with { A = 102 }); // 40%
 
         foreach (var collision in Enum.GetValues<CollisionType>())
