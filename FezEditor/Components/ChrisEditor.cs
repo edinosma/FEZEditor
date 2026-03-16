@@ -107,7 +107,8 @@ public partial class ChrisEditor : EditorComponent
         {
             EditMode.Select => [("LMB Drag", "Select Faces")],
             EditMode.Add => [("LMB", "Add Trixels")],
-            EditMode.Remove => [("LMB", "Remove Trixels")]
+            EditMode.Remove => [("LMB", "Remove Trixels")],
+            _ => throw new InvalidOperationException()
         });
         _nowTime = gameTime.TotalGameTime;
         _scene.Update(gameTime);
