@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,7 +11,9 @@ public sealed class TempTextureTracker : IDisposable
 {
     private const int BytesPerPixel = 4;
 
-    private readonly string _tempFilePath;
+    private readonly string _filePath;
+
+    private readonly bool _isTemporary;
 
     private DateTime _lastWrite;
 
@@ -23,30 +25,43 @@ public sealed class TempTextureTracker : IDisposable
     {
         _game = game;
         _game.Activated += OnWindowFocused;
-        _tempFilePath = Path.ChangeExtension(tempFilePath, ".tmp.png");
+        _filePath = Path.ChangeExtension(tempFilePath, ".tmp.png");
+        _isTemporary = true;
         WriteToDisk(source);
+    }
+
+    public TempTextureTracker(Game game, string filePath)
+    {
+        _game = game;
+        _game.Activated += OnWindowFocused;
+        _filePath = filePath;
+        _isTemporary = false;
+        _lastWrite = File.GetLastWriteTimeUtc(_filePath);
     }
 
     public void OpenInEditor()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            Process.Start(new ProcessStartInfo(_tempFilePath) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(_filePath) { UseShellExecute = true });
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            Process.Start("xdg-open", _tempFilePath);
+            Process.Start("xdg-open", _filePath);
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            Process.Start("open", _tempFilePath);
+            Process.Start("open", _filePath);
         }
     }
 
     public void Dispose()
     {
         _game.Activated -= OnWindowFocused;
-        File.Delete(_tempFilePath);
+        if (_isTemporary)
+        {
+            File.Delete(_filePath);
+        }
     }
 
     public static void CleanOrphans(string path)
@@ -65,12 +80,17 @@ public sealed class TempTextureTracker : IDisposable
 
     private void OnWindowFocused(object? sender, EventArgs e)
     {
-        if (!File.Exists(_tempFilePath))
+        if (!File.Exists(_filePath))
         {
-            throw new FileNotFoundException();
+            if (_isTemporary)
+            {
+                throw new FileNotFoundException();
+            }
+
+            return;
         }
 
-        var lastWrite = File.GetLastWriteTime(_tempFilePath);
+        var lastWrite = File.GetLastWriteTimeUtc(_filePath);
         if (lastWrite <= _lastWrite)
         {
             return;
@@ -86,14 +106,14 @@ public sealed class TempTextureTracker : IDisposable
         texture.GetData(rgba);
 
         using var image = Image.LoadPixelData<Rgba32>(rgba, texture.Width, texture.Height);
-        image.SaveAsPng(_tempFilePath);
+        image.SaveAsPng(_filePath);
 
-        _lastWrite = File.GetLastWriteTime(_tempFilePath);
+        _lastWrite = File.GetLastWriteTimeUtc(_filePath);
     }
 
     private Texture2D LoadFromDisk()
     {
-        using var image = Image.Load<Rgba32>(_tempFilePath);
+        using var image = Image.Load<Rgba32>(_filePath);
         var rgba = new byte[image.Width * image.Height * BytesPerPixel];
         image.CopyPixelDataTo(rgba);
 
