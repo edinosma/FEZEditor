@@ -793,25 +793,38 @@ public static class ImGuiX
         }
     }
 
-    public static void DrawTimeOnly(Vector2 position, TimeOnly time)
+    public static void DrawClock(Vector2 position, Clock clock)
     {
         var dl = ImGui.GetWindowDrawList();
         var lineHeight = ImGui.GetTextLineHeight();
         var padding = new NVector2(4, 4);
 
-        var text = $@"{Icons.Clockface} {time:HH\:mm}";
-        var textSize = ImGui.CalcTextSize(text);
+        var timeText = $@"{Icons.Clockface} {clock.CurrentTime:HH\:mm}";
+
+        const float sliderWidth = 120f;
+        var totalWidth = sliderWidth + padding.X * 2;
 
         // Center horizontally around the given position
-        var pos = new NVector2(position.X - textSize.X / 2f, position.Y);
-
-        // Draw background
-        var bgMin = pos - padding;
-        var bgMax = pos + textSize with { Y = lineHeight } + padding;
+        var bgMin = new NVector2(position.X - totalWidth / 2f, position.Y) - padding;
+        var bgMax = bgMin + new NVector2(totalWidth, lineHeight) + padding * 2;
         dl.AddRectFilled(bgMin, bgMax, 0xAA000000, 0f);
 
-        // Draw text
-        dl.AddText(pos, 0xFFFFFFFF, text);
+        var sliderPos = bgMin + padding - new NVector2(0, ImGui.GetStyle().FramePadding.Y);
+        ImGui.SetCursorScreenPos(sliderPos);
+        ImGui.SetNextItemWidth(sliderWidth);
+        var timeFactor = clock.TimeFactor;
+        if (ImGui.SliderFloat("##timeFactor", ref timeFactor, 1f, 20f, ""))
+        {
+            clock.TimeFactor = timeFactor;
+        }
+
+        // Draw time text centered on slider
+        var timeTextSize = ImGui.CalcTextSize(timeText);
+        var timeTextPos = sliderPos + new NVector2(
+            (sliderWidth - timeTextSize.X) / 2f,
+            ImGui.GetStyle().FramePadding.Y + (lineHeight - timeTextSize.Y) / 2f
+        );
+        dl.AddText(timeTextPos, 0xFFFFFFFF, timeText);
     }
 
     #endregion

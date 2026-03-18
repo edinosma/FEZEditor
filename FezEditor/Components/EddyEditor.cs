@@ -89,7 +89,7 @@ public class EddyEditor : EditorComponent
                 gizmo.Draw(imageMin + new Vector2(size.X - 8f, 8f));
                 ImGuiX.DrawStats(imageMin + new Vector2(8, 8), RenderingService.GetStats());
                 var topCenter = imageMin + new Vector2(size.X / 2f, 8f);
-                ImGuiX.DrawTimeOnly(topCenter, _clock.CurrentTime);
+                ImGuiX.DrawClock(topCenter, _clock);
             }
         }
     }
