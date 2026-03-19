@@ -43,6 +43,7 @@ public partial class EditorService
             Sky sky => new LukeEditor(_game, path, sky),
             RTexture2D texture => new TexViewer(_game, path, texture),
             RAnimatedTexture animatedTexture => new TexViewer(_game, path, animatedTexture),
+            NpcMetadata npc => new MuEditor(_game, path, npc),
             _ => new NotSupportedComponent(_game, path, asset.GetType())
         };
     }
@@ -75,6 +76,7 @@ public partial class EditorService
         if (assetType == typeof(TrileSet)) return ChrisEditor.CreateTs(name);
         if (assetType == typeof(MapTree)) return JadeEditor.Create(name);
         if (assetType == typeof(Sky)) return LukeEditor.Create(name);
+        if (assetType == typeof(NpcMetadata)) return MuEditor.Create();
         throw new InvalidOperationException();
     }
 }
