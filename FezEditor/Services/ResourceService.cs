@@ -4,7 +4,6 @@ using FezEditor.Tools;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Serilog;
-using Serilog.Core;
 
 namespace FezEditor.Services;
 
@@ -28,6 +27,8 @@ public class ResourceService : IDisposable
     private readonly IContentManager _content;
 
     private readonly Game _game;
+
+    private readonly Dictionary<string, WeakReference<object>> _cache = new(StringComparer.OrdinalIgnoreCase);
 
     public ResourceService(Game game)
     {
@@ -64,6 +65,7 @@ public class ResourceService : IDisposable
     public void CloseProvider()
     {
         ProviderChanged?.Invoke();
+        _cache.Clear();
         _provider?.Dispose();
         _provider = null;
         Logger.Information("Provider closed");
@@ -114,7 +116,14 @@ public class ResourceService : IDisposable
         }
 
         path = path.Replace('\\', '/');
+        if (_cache.TryGetValue(path, out var weakRef) && weakRef.TryGetTarget(out var cached))
+        {
+            Logger.Debug("Cache hit - {0} ({1})", path, cached.GetType().Name);
+            return cached;
+        }
+
         var @object = _provider!.Load<object>(path);
+        _cache[path] = new WeakReference<object>(@object);
         Logger.Information("Loaded - {0} ({1})", path, @object.GetType().Name);
         return @object;
     }
@@ -129,6 +138,12 @@ public class ResourceService : IDisposable
 
     public Dictionary<string, RAnimatedTexture> LoadAnimations(string path)
     {
+        if (_cache.TryGetValue(path, out var weakRef) && weakRef.TryGetTarget(out var cached))
+        {
+            Logger.Debug("Cache hit animations - {0}", path);
+            return (Dictionary<string, RAnimatedTexture>)cached;
+        }
+
         var animations = new Dictionary<string, RAnimatedTexture>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var file in _provider!.Files)
@@ -142,6 +157,7 @@ public class ResourceService : IDisposable
             }
         }
 
+        _cache[path] = new WeakReference<object>(animations);
         Logger.Information("Loaded animations - {0}", path);
         return animations;
     }
@@ -158,6 +174,7 @@ public class ResourceService : IDisposable
         }
 
         _provider!.Save(path, asset);
+        _cache.Remove(path);
         _provider.Refresh();
         ProviderChanged?.Invoke();
         Logger.Information("Saved - {0}", path);
@@ -174,6 +191,7 @@ public class ResourceService : IDisposable
     public void Move(string path, string newPath)
     {
         _provider!.Move(path, newPath);
+        _cache.Remove(path);
         _provider.Refresh();
         ProviderChanged?.Invoke();
         Logger.Information("Moved - {0} -> {1}", path, newPath);
@@ -182,6 +200,7 @@ public class ResourceService : IDisposable
     public void Delete(string path)
     {
         _provider!.Remove(path);
+        _cache.Remove(path);
         _provider.Refresh();
         ProviderChanged?.Invoke();
         Logger.Information("Deleted - {0}", path);
@@ -210,6 +229,7 @@ public class ResourceService : IDisposable
     public void Dispose()
     {
         GC.SuppressFinalize(this);
+        _cache.Clear();
         _provider?.Dispose();
         _game.Activated -= OnGameActivated;
     }
