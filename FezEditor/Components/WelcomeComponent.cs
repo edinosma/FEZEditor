@@ -4,11 +4,14 @@ using FezEditor.Tools;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Serilog;
 
 namespace FezEditor.Components;
 
 public class WelcomeComponent : EditorComponent
 {
+    private static readonly ILogger Logger = Logging.Create<WelcomeComponent>();
+
     private const float ContentWidth = 250f;
 
     private const float ContentHeight = 230f;
@@ -17,12 +20,15 @@ public class WelcomeComponent : EditorComponent
 
     private Texture2D _logoTexture = null!;
 
+    private readonly AppStorageService _appStorageService;
+
     private readonly EditorService _editorService;
 
     private readonly ResourceService _resourceService;
 
     public WelcomeComponent(Game game) : base(game, "Welcome!")
     {
+        _appStorageService = game.GetService<AppStorageService>();
         _editorService = game.GetService<EditorService>();
         _resourceService = game.GetService<ResourceService>();
     }
@@ -35,16 +41,64 @@ public class WelcomeComponent : EditorComponent
     public override void Draw()
     {
         var regionSize = ImGuiX.GetContentRegionAvail();
-        var offsetX = Math.Max(0, (regionSize.X - ContentWidth) / 2);
-        var offsetY = Math.Max(0, (regionSize.Y - ContentHeight) / 2);
+        var offset = new Vector2
+        {
+            X = Math.Max(0, (regionSize.X - ContentWidth) / 2),
+            Y = Math.Max(0, (regionSize.Y - ContentHeight) / 2)
+        };
 
-        ImGuiX.SetCursorPos(ImGuiX.GetCursorPos() + new Vector2(offsetX, offsetY));
+        ImGuiX.SetCursorPos(ImGuiX.GetCursorPos() + offset);
         ImGui.BeginGroup();
 
         ImGuiX.Image(_logoTexture);
         ImGui.NewLine();
         ImGui.Text("Welcome to FEZEDITOR!");
         ImGui.NewLine();
+
+        if (ImGuiX.BeginChild("##recentWrapper", new Vector2(ContentWidth, 0), ImGuiChildFlags.AutoResizeY))
+        {
+            if (ImGui.CollapsingHeader("Open Recent"))
+            {
+                var recentPaths = _appStorageService.RecentPaths.ToArray();
+                if (recentPaths.Length == 0)
+                {
+                    ImGui.Indent();
+                    ImGui.TextDisabled("No recent files.");
+                    ImGui.Unindent();
+                }
+                else
+                {
+                    ImGui.Indent();
+                    foreach (var entry in recentPaths)
+                    {
+                        var name = Path.GetFileName(entry.Path.TrimEnd('/', '\\'));
+                        if (string.IsNullOrEmpty(name))
+                        {
+                            name = entry.Path;
+                        }
+
+                        var icon = entry.Kind == "File" ? Icons.Package : Icons.Folder;
+                        if (ImGuiX.Button($"{icon} {name}##recent_{entry.Path}", new Vector2(-1, 0)))
+                        {
+                            OpenRecentEntry(entry);
+                        }
+
+                        if (ImGui.IsItemHovered())
+                        {
+                            ImGui.SetTooltip(entry.Path);
+                        }
+                    }
+
+                    if (ImGuiX.Button($"{Icons.Trash} Clear recent files", new Vector2(-1, 0)))
+                    {
+                        _appStorageService.ClearRecentPaths();
+                        _appStorageService.Save();
+                    }
+                }
+            }
+
+            ImGui.EndChild();
+        }
 
         if (ImGui.Button($"{Icons.Package} Open PAK file"))
         {
@@ -123,6 +177,8 @@ public class WelcomeComponent : EditorComponent
         var pakPath = files.FirstOrDefault();
         if (!string.IsNullOrEmpty(pakPath))
         {
+            _appStorageService.AddRecentPath(pakPath, "File");
+            _appStorageService.Save(); // persist immediately in case of crash
             _resourceService.OpenProvider(new FileInfo(pakPath));
             _editorService.CloseEditor(this);
         }
@@ -133,8 +189,32 @@ public class WelcomeComponent : EditorComponent
         var dirPath = files.FirstOrDefault();
         if (!string.IsNullOrEmpty(dirPath))
         {
+            _appStorageService.AddRecentPath(dirPath, "Directory");
+            _appStorageService.Save(); // ditto
             _resourceService.OpenProvider(new DirectoryInfo(dirPath));
             _editorService.CloseEditor(this);
+        }
+    }
+
+    private void OpenRecentEntry(Settings.RecentEntry entry)
+    {
+        var exists = entry.Kind == "File"
+            ? File.Exists(entry.Path)
+            : Directory.Exists(entry.Path);
+
+        if (!exists)
+        {
+            Logger.Warning("Recent path no longer exists: {Path}", entry.Path);
+            return;
+        }
+
+        if (entry.Kind == "File")
+        {
+            OpenPakFile(new[] { entry.Path });
+        }
+        else
+        {
+            OpenDirectory(new[] { entry.Path });
         }
     }
 }

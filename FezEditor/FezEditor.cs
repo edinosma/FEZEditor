@@ -22,6 +22,8 @@ public class FezEditor : Game
 
     private readonly GraphicsDeviceManager _deviceManager;
 
+    private AppStorageService _appStorage = null!;
+
     private ContentService _content = null!;
 
     private ImGuiService _imGui = null!;
@@ -71,6 +73,7 @@ public class FezEditor : Game
         Logger.Information("Version - {0}", Version);
         RepackerExtensions.Gd = GraphicsDevice;
 
+        _appStorage = this.CreateService<AppStorageService>();
         _content = this.CreateService<ContentService>();
         _imGui = this.CreateService<ImGuiService>();
         _rendering = this.CreateService<RenderingService>();
@@ -85,6 +88,7 @@ public class FezEditor : Game
         this.AddComponent(new MainLayout(this));
         _editor.OpenEditor(new WelcomeComponent(this));
 
+        _appStorage.LoadWindowState(_deviceManager);
         base.Initialize();
     }
 
@@ -104,6 +108,7 @@ public class FezEditor : Game
 
     protected override void Dispose(bool disposing)
     {
+        _appStorage.SaveWindowState();
         base.Dispose(disposing);
         this.RemoveServices();
     }

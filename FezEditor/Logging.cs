@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using FezEditor.Services;
 using Microsoft.Xna.Framework;
 using Serilog;
 using Serilog.Events;
@@ -10,12 +11,10 @@ public static class Logging
     private const string LogTemplate =
         "({Timestamp:HH:mm:ss.fff}) {Level:u4} [{SourceContext}] {Message:lj}{NewLine}{Exception}";
 
-    private const string DateTimeFormat = "yyyy-MM-dd_HH-mm-ss";
-
     public static void Initialize(LogEventLevel level = LogEventLevel.Information)
     {
-        var logFile = Path.Combine(AppContext.BaseDirectory, "Logs",
-            $"[{DateTime.Now:DateTimeFormat}] {level} Log.txt");
+        var logFile = Path.Combine(AppStorageService.BaseDir, "Logs",
+            $"[{DateTime.Now:yyyy-MM-ddTHH-mm-ss}] {level} Log.txt");
 
         CleanOldLogFiles(logFile);
         Log.Logger = new LoggerConfiguration()
@@ -49,7 +48,7 @@ public static class Logging
     private static bool TryParseLogFileDate(string file, out DateTime date)
     {
         var name = Path.GetFileNameWithoutExtension(file);
-        return DateTime.TryParseExact(name[1..20], DateTimeFormat,
+        return DateTime.TryParseExact(name[1..20], "yyyy-MM-ddTHH-mm-ss",
             CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
     }
 
