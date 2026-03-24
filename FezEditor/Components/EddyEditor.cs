@@ -96,6 +96,8 @@ public class EddyEditor : EditorComponent
 
     public override void Draw()
     {
+        DrawToolbar();
+
         var size = ImGuiX.GetContentRegionAvail();
         var w = (int)size.X;
         var h = (int)size.Y;
@@ -121,6 +123,28 @@ public class EddyEditor : EditorComponent
                 var topCenter = imageMin + new Vector2(size.X / 2f, 8f);
                 ImGuiX.DrawClock(topCenter, _clock);
             }
+        }
+    }
+
+    private void DrawToolbar()
+    {
+        if (ImGui.Button($"{Icons.Export}"))
+        {
+            FileDialog.Show(FileDialog.Type.SaveFile, files =>
+            {
+                var exporter = new PhilExporter(Game, _level, files[0]);
+                Game.AddComponent(exporter);
+            }, new FileDialog.Options
+            {
+                Title = "Export level diorama",
+                DefaultLocation = Path.Combine(ResourceService.GetFullPath(""), $"{_level.Name}.glb"),
+                Filters = [new FileDialog.Filter("GLB file", "glb")]
+            });
+        }
+
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip("Export as diorama");
         }
     }
 

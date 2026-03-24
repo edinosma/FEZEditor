@@ -121,4 +121,24 @@ public static class RepackerExtensions
     {
         return new TrileEmplacement(v.X, v.Y, v.Z);
     }
+
+    public static NVector2 ToNumerics(this RVector2 v)
+    {
+        return new NVector2(v.X, v.Y);
+    }
+
+    public static NVector3 ToNumerics(this RVector3 v)
+    {
+        return new NVector3(v.X, v.Y, v.Z);
+    }
+
+    public static NQuaternion ToNumerics(this RQuaternion q)
+    {
+        return new NQuaternion(q.X, q.Y, q.Z, q.W);
+    }
+
+    public static NQuaternion ToNumerics(this Quaternion q)
+    {
+        return new NQuaternion(q.X, q.Y, q.Z, q.W);
+    }
 }
