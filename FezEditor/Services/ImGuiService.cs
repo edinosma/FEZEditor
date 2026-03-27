@@ -75,7 +75,8 @@ public partial class ImGuiService : IDisposable
         {
             var io = ImGui.GetIO();
             io.Fonts.AddFontDefault();
-            LoadIconsFont("Fonts/Codicon");
+            LoadIconsFont("Fonts/Codicon", Icons.IconMin, Icons.IconMax);
+            LoadIconsFont("Fonts/Lucide", Lucide.IconMin, Lucide.IconMax);
             ImGuiX.Fonts.NotoSans = LoadFont("Fonts/NotoSans", io.Fonts.GetGlyphRangesDefault());
             ImGuiX.Fonts.NotoSansJp = LoadFont("Fonts/NotoSansJP", io.Fonts.GetGlyphRangesJapanese());
             ImGuiX.Fonts.NotoSansKr = LoadFont("Fonts/NotoSansKR", io.Fonts.GetGlyphRangesKorean());
@@ -369,7 +370,7 @@ public partial class ImGuiService : IDisposable
     /// <remarks>
     /// This method merges icons into previously loaded font.
     /// </remarks>
-    private unsafe void LoadIconsFont(string path, float size = 16f)
+    private unsafe void LoadIconsFont(string path, ushort min, ushort max, float size = 16f)
     {
         Logger.Debug("Loading icons font - {0}", path);
         var io = ImGui.GetIO();
@@ -381,7 +382,7 @@ public partial class ImGuiService : IDisposable
         config->GlyphMinAdvanceX = size;
         config->GlyphOffset = new NVector2(0, size > 16 ? 7 : 5);
 
-        var ranges = new ushort[] { Icons.IconMin, Icons.IconMax, 0 };
+        var ranges = new ushort[] { min, max, 0 };
         fixed (ushort* rangesPtr = ranges)
         {
             io.Fonts.AddFontFromMemoryTTF(nativeData, data.Length, size, config, (nint)rangesPtr);
