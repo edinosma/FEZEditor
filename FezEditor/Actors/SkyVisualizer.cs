@@ -192,7 +192,7 @@ public class SkyVisualizer : ActorComponent
         #region Clouds
 
         {
-            _clouds = _scene.CreateActor();
+            _clouds = _scene.CreateActor(Actor);
             var mesh = _clouds.AddComponent<SkyCloudsMesh>();
             mesh.Sky = this;
             mesh.Visualize(sky.Name, sky.Clouds, sky.Density);
@@ -203,7 +203,7 @@ public class SkyVisualizer : ActorComponent
         #region Background
 
         {
-            _background = _scene.CreateActor();
+            _background = _scene.CreateActor(Actor);
             var mesh = _background.AddComponent<SkyBackgroundMesh>();
             mesh.Sky = this;
             mesh.Visualize(sky.Name, sky.Background);
@@ -214,7 +214,7 @@ public class SkyVisualizer : ActorComponent
         #region Stars
 
         {
-            _stars = _scene.CreateActor();
+            _stars = _scene.CreateActor(Actor);
             var mesh = _stars.AddComponent<SkyStarsMesh>();
             mesh.Sky = this;
             mesh.Visualize(sky.Name, sky.Stars, Rainy);
@@ -225,7 +225,7 @@ public class SkyVisualizer : ActorComponent
         #region Background Layers
 
         {
-            _layers = _scene.CreateActor();
+            _layers = _scene.CreateActor(Actor);
             var mesh = _layers.AddComponent<SkyLayersMesh>();
             mesh.Sky = this;
             mesh.Visualize(sky.Name, sky.Layers);
@@ -248,7 +248,7 @@ public class SkyVisualizer : ActorComponent
             return;
         }
 
-        _shadows = _scene.CreateActor();
+        _shadows = _scene.CreateActor(Actor);
         _shadows.Visible = Shadows;
         var mesh = _shadows.AddComponent<SkyShadowsMesh>();
         mesh.Sky = this;

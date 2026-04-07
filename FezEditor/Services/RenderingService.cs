@@ -13,7 +13,7 @@ public partial class RenderingService : IDisposable
 
     public GraphicsDevice GraphicsDevice { get; }
 
-    private readonly Queue<Rid> _instanceTraversal = new();
+    private readonly Stack<Rid> _instanceTraversal = new();
 
     private uint _nextRid = 1;
 
@@ -74,13 +74,13 @@ public partial class RenderingService : IDisposable
 
             var viewProjection = view * projection;
 
-            // Draw instances in tree traversal order.
+            // Draw instances in DFS traversal order (last child draws last)
             _instanceTraversal.Clear();
-            _instanceTraversal.Enqueue(world.Root);
+            _instanceTraversal.Push(world.Root);
 
             while (_instanceTraversal.Count > 0)
             {
-                var instanceRid = _instanceTraversal.Dequeue();
+                var instanceRid = _instanceTraversal.Pop();
                 var instance = GetResource(_instances, instanceRid);
                 if (!instance.Visible)
                 {
@@ -104,9 +104,9 @@ public partial class RenderingService : IDisposable
                         throw new ArgumentOutOfRangeException("Not supported instance type:  " + instance.Type);
                 }
 
-                foreach (var child in instance.Children)
+                for (var i = instance.Children.Count - 1; i >= 0; i--)
                 {
-                    _instanceTraversal.Enqueue(child);
+                    _instanceTraversal.Push(instance.Children[i]);
                 }
             }
 
