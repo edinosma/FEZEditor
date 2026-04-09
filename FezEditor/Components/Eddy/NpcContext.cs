@@ -64,10 +64,16 @@ internal class NpcContext : BaseContext
             Eddy.SelectedContext = EddyContext.NonPlayableCharacter;
         }
 
-        if (Eddy.AssetBrowser.WasSelected(AssetType.NonPlayableCharacter))
+        if (Eddy.AssetBrowser.Select(AssetType.NonPlayableCharacter))
         {
             Eddy.Tool = EddyTool.Paint;
             Eddy.SelectedContext = EddyContext.NonPlayableCharacter;
+        }
+
+        if (Eddy.InstanceBrowser.Select(out var sel) && sel.context == EddyContext.NonPlayableCharacter)
+        {
+            Eddy.InstanceBrowser.Consume();
+            Eddy.FocusOn(Level.NonPlayerCharacters[sel.id].Position.ToXna());
         }
     }
 
@@ -219,6 +225,7 @@ internal class NpcContext : BaseContext
             _translateScope = null;
         }
     }
+
 
     private Vector3 ComputeSelectionCentroid()
     {

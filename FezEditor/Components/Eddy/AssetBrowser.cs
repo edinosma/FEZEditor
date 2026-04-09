@@ -108,6 +108,11 @@ public class AssetBrowser : IDisposable
         return _selectedEntry.Type == type ? _selectedEntry.Name : string.Empty;
     }
 
+    public string? GetTrileNameById(int trileId)
+    {
+        return _trileSet?.Triles.GetValueOrDefault(trileId)?.Name;
+    }
+
     public Texture2D? GetThumbnail(AssetType type, string name)
     {
         var entries = _entries.GetValueOrDefault(type) ?? [];
@@ -121,7 +126,7 @@ public class AssetBrowser : IDisposable
         return thumb == _placeholder ? null : thumb;
     }
 
-    public bool WasSelected(AssetType type)
+    public bool Select(AssetType type)
     {
         if (_selectionDirtyType == type)
         {

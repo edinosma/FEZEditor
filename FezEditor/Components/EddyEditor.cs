@@ -18,6 +18,8 @@ public class EddyEditor : EditorComponent, IEddyEditor
 
     public AssetBrowser AssetBrowser { get; }
 
+    public InstanceBrowser InstanceBrowser { get; }
+
     public Camera Camera => _cameraActor.GetComponent<Camera>();
 
     public CursorMesh Cursor => _cursorActor.GetComponent<CursorMesh>();
@@ -54,12 +56,15 @@ public class EddyEditor : EditorComponent, IEddyEditor
 
     private bool _showAssetBrowser;
 
+    private bool _showInstanceBrowser;
+
     private bool _queueRevisualization;
 
     public EddyEditor(Game game, string title, Level level) : base(game, title)
     {
         _level = level;
         AssetBrowser = new AssetBrowser(game);
+        InstanceBrowser = new InstanceBrowser(level, AssetBrowser);
         History.RegisterConverter(new TrileEmplacementConverter());
         History.Track(level);
         History.StateChanged += () => _queueRevisualization = true;
@@ -89,6 +94,7 @@ public class EddyEditor : EditorComponent, IEddyEditor
     public override void LoadContent()
     {
         AssetBrowser.LoadContent(ContentManager);
+        InstanceBrowser.LoadContent(ContentManager);
         Scene = new Scene(Game, ContentManager);
         {
             _cameraActor = Scene.CreateActor();
@@ -227,6 +233,17 @@ public class EddyEditor : EditorComponent, IEddyEditor
                 ImGui.End();
             }
         }
+
+        if (_showInstanceBrowser)
+        {
+            const ImGuiWindowFlags flags = ImGuiWindowFlags.NoCollapse;
+            ImGuiX.SetNextWindowSize(new Vector2(500, 400), ImGuiCond.FirstUseEver);
+            if (ImGui.Begin("Instance Browser", ref _showInstanceBrowser, flags))
+            {
+                InstanceBrowser.Draw();
+                ImGui.End();
+            }
+        }
     }
 
     public override void Dispose()
@@ -237,6 +254,7 @@ public class EddyEditor : EditorComponent, IEddyEditor
         }
 
         AssetBrowser.Dispose();
+        InstanceBrowser.Dispose();
         Scene.Dispose();
         base.Dispose();
     }
@@ -305,6 +323,14 @@ public class EddyEditor : EditorComponent, IEddyEditor
         ImGui.TextDisabled("|");
 
         ImGui.SameLine();
+        ImGui.BeginDisabled(_showInstanceBrowser);
+        if (ImGui.Button($"{Lucide.List} Instances"))
+        {
+            _showInstanceBrowser = true;
+        }
+        ImGui.EndDisabled();
+
+        ImGui.SameLine();
         if (ImGui.Button($"{Icons.Export} Diorama"))
         {
             FileDialog.Show(FileDialog.Type.SaveFile, files =>
@@ -330,7 +356,6 @@ public class EddyEditor : EditorComponent, IEddyEditor
         {
             _showProperties = true;
         }
-
         ImGui.EndDisabled();
 
         ImGui.SameLine();
@@ -435,5 +460,64 @@ public class EddyEditor : EditorComponent, IEddyEditor
 
         var lineHeight = ImGui.GetTextLineHeight();
         ImGuiX.DrawStats(position - new Vector2(0, lineHeight * stats.Count + 8), stats);
+    }
+
+    public void FocusOn(Vector3 target)
+    {
+        var candidates = new[]
+        {
+            Vector3.Forward,
+            Vector3.Backward,
+            Vector3.Left,
+            Vector3.Right
+        };
+
+        var levelSize = _level.Size.ToXna();
+        var levelCenter = levelSize / 2f;
+
+        var bestDir1 = candidates[0];
+        var bestClearance = -1f;
+
+        foreach (var dir in candidates)
+        {
+            // Camera starts at the level boundary in this direction, at target's Y height
+            var camPos = new Vector3(
+                levelCenter.X + dir.X * levelSize.X / 2f,
+                target.Y,
+                levelCenter.Z + dir.Z * levelSize.Z / 2f
+            );
+
+            // Raycast from boundary toward target
+            var toTarget = target - camPos;
+            var dist = toTarget.Length();
+            if (dist < 0.001f)
+            {
+                continue;
+            }
+
+            var toTargetDir = toTarget / dist;
+            var hit = Scene.Raycast(new Ray(camPos, toTargetDir));
+
+            // Clearance = distance to first obstruction (or full distance if unobstructed)
+            var clearance = hit?.Distance ?? dist;
+            if (clearance > bestClearance)
+            {
+                bestClearance = clearance;
+                bestDir1 = dir;
+            }
+        }
+
+        // Place camera at level boundary in the best direction, clamped to desired distance
+        var finalCamPos = new Vector3(
+            levelCenter.X + bestDir1.X * levelSize.X / 2f,
+            target.Y,
+            levelCenter.Z + bestDir1.Z * levelSize.Z / 2f
+        );
+
+        var approachDir = Vector3.Normalize(finalCamPos - target);
+        const float desiredDistance = 10f;
+        var placementDist = Math.Min(Vector3.Distance(finalCamPos, target), desiredDistance);
+
+        _cameraActor.GetComponent<FirstPersonControl>().FocusOn(target, approachDir, placementDist);
     }
 }

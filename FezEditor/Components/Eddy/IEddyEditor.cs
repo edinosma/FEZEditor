@@ -14,6 +14,8 @@ internal interface IEddyEditor
 
     AssetBrowser AssetBrowser { get; }
 
+    InstanceBrowser InstanceBrowser { get; }
+
     Camera Camera { get; }
 
     CursorMesh Cursor { get; }
@@ -35,4 +37,6 @@ internal interface IEddyEditor
     EddyContext SelectedContext { get; set; }
 
     Dirty<EddyVisuals> Visuals { get; set; }
+
+    void FocusOn(Vector3 target);
 }

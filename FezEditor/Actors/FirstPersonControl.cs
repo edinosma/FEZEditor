@@ -28,6 +28,15 @@ public class FirstPersonControl : ActorComponent
         _transform = actor.GetComponent<Transform>();
     }
 
+    public void FocusOn(Vector3 target, Vector3 approachDirection, float distance)
+    {
+        var lookDir = -approachDirection;
+        _yaw = MathF.Atan2(-lookDir.X, -lookDir.Z);
+        _pitch = MathF.Asin(MathHelper.Clamp(lookDir.Y, -1f, 1f));
+        _pitch = MathHelper.Clamp(_pitch, -MathHelper.PiOver2 + 0.01f, MathHelper.PiOver2 - 0.01f);
+        _transform.Position = target + approachDirection * distance;
+    }
+
     public override void Update(GameTime gameTime)
     {
         #region Update Input Hints

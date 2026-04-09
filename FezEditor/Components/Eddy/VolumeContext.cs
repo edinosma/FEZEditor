@@ -75,10 +75,17 @@ internal class VolumeContext : BaseContext
             Eddy.SelectedContext = EddyContext.Volume;
         }
 
-        if (Eddy.AssetBrowser.WasSelected(AssetType.ArtObject))
+        if (Eddy.AssetBrowser.Select(AssetType.ArtObject))
         {
             Eddy.Tool = EddyTool.Paint;
             Eddy.SelectedContext = EddyContext.Volume;
+        }
+
+        if (Eddy.InstanceBrowser.Select(out var sel) && sel.context == EddyContext.Volume)
+        {
+            Eddy.InstanceBrowser.Consume();
+            var volume = Level.Volumes[sel.id];
+            Eddy.FocusOn((volume.From.ToXna() + volume.To.ToXna()) / 2f);
         }
     }
 
@@ -224,6 +231,7 @@ internal class VolumeContext : BaseContext
             _translateScope = null;
         }
     }
+
 
     private Vector3 ComputeSelectionCentroid()
     {

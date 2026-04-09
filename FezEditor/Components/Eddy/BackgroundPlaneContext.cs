@@ -66,10 +66,16 @@ internal class BackgroundPlaneContext : BaseContext
             Eddy.SelectedContext = EddyContext.BackgroundPlane;
         }
 
-        if (Eddy.AssetBrowser.WasSelected(AssetType.BackgroundPlane))
+        if (Eddy.AssetBrowser.Select(AssetType.BackgroundPlane))
         {
             Eddy.Tool = EddyTool.Paint;
             Eddy.SelectedContext = EddyContext.BackgroundPlane;
+        }
+
+        if (Eddy.InstanceBrowser.Select(out var sel) && sel.context == EddyContext.BackgroundPlane)
+        {
+            Eddy.InstanceBrowser.Consume();
+            Eddy.FocusOn(Level.BackgroundPlanes[sel.id].Position.ToXna());
         }
     }
 
@@ -218,6 +224,7 @@ internal class BackgroundPlaneContext : BaseContext
             _translateScope = null;
         }
     }
+
 
     private Vector3 ComputeSelectionCentroid()
     {

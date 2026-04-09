@@ -67,10 +67,16 @@ internal class ArtObjectContext : BaseContext
             Eddy.SelectedContext = EddyContext.ArtObject;
         }
 
-        if (Eddy.AssetBrowser.WasSelected(AssetType.ArtObject))
+        if (Eddy.AssetBrowser.Select(AssetType.ArtObject))
         {
             Eddy.Tool = EddyTool.Paint;
             Eddy.SelectedContext = EddyContext.ArtObject;
+        }
+
+        if (Eddy.InstanceBrowser.Select(out var sel) && sel.context == EddyContext.ArtObject)
+        {
+            Eddy.InstanceBrowser.Consume();
+            Eddy.FocusOn(Level.ArtObjects[sel.id].Position.ToXna());
         }
     }
 

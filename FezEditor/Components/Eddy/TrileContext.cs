@@ -100,10 +100,21 @@ internal sealed class TrileContext : BaseContext
             Eddy.SelectedContext = EddyContext.Trile;
         }
 
-        if (Eddy.AssetBrowser.WasSelected(AssetType.Trile))
+        if (Eddy.AssetBrowser.Select(AssetType.Trile))
         {
             Eddy.Tool = EddyTool.Paint;
             Eddy.SelectedContext = EddyContext.Trile;
+        }
+
+        if (Eddy.InstanceBrowser.Select(out var sel) && sel.context == EddyContext.Trile)
+        {
+            Eddy.InstanceBrowser.Consume();
+            if (_groupEmplacements.TryGetValue(sel.id, out var emps) && emps.Count > 0)
+            {
+                var centroid = emps.Aggregate(Vector3.Zero,
+                    (sum, e) => sum + new Vector3(e.X, e.Y, e.Z)) / emps.Count + new Vector3(0.5f);
+                Eddy.FocusOn(centroid);
+            }
         }
     }
 

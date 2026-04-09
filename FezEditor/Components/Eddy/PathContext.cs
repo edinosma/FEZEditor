@@ -25,6 +25,13 @@ internal class PathContext : BaseContext
                 mesh.Pickable = visible;
             }
         }
+
+        if (Eddy.InstanceBrowser.Select(out var sel) && sel.context == EddyContext.Path)
+        {
+            Eddy.InstanceBrowser.Consume();
+            Eddy.SelectedContext = EddyContext.Path;
+            Eddy.Tool = EddyTool.Select;
+        }
     }
 
     protected override void Act()

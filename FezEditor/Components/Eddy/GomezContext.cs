@@ -59,6 +59,12 @@ internal class GomezContext : BaseContext
         {
             Eddy.SelectedContext = EddyContext.Gomez;
         }
+
+        if (Eddy.InstanceBrowser.Select(out var sel) && sel.context == EddyContext.Gomez)
+        {
+            Eddy.InstanceBrowser.Consume();
+            Eddy.FocusOn(Level.StartingFace.Id.ToXna().ToVector3() + Vector3.Up);
+        }
     }
 
     protected override void Act()
