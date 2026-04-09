@@ -123,17 +123,17 @@ public class InputService
 
     public bool IsRightMousePressed()
     {
-        return _currentMouseState.RightButton == ButtonState.Pressed;
+        return !ImGui.GetIO().WantCaptureMouse && _currentMouseState.RightButton == ButtonState.Pressed;
     }
 
     public bool IsMiddleMousePressed()
     {
-        return _currentMouseState.MiddleButton == ButtonState.Pressed;
+        return !ImGui.GetIO().WantCaptureMouse && _currentMouseState.MiddleButton == ButtonState.Pressed;
     }
 
     public bool IsLeftMousePressed()
     {
-        return _currentMouseState.LeftButton == ButtonState.Pressed;
+        return !ImGui.GetIO().WantCaptureMouse && _currentMouseState.LeftButton == ButtonState.Pressed;
     }
 
     public Vector2 GetMousePosition()

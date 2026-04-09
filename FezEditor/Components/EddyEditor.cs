@@ -61,11 +61,15 @@ public class EddyEditor : EditorComponent, IEddyEditor
 
     private readonly List<BaseContext> _contexts = new();
 
+    private readonly ScriptBrowser _scriptBrowser;
+
     private bool _showProperties;
 
     private bool _showAssetBrowser;
 
     private bool _showInstanceBrowser;
+
+    private bool _showScriptBrowser;
 
     private bool _queueRevisualization;
 
@@ -74,6 +78,7 @@ public class EddyEditor : EditorComponent, IEddyEditor
         _level = level;
         AssetBrowser = new AssetBrowser(game);
         InstanceBrowser = new InstanceBrowser(level, AssetBrowser);
+        _scriptBrowser = new ScriptBrowser(game, level, this);
         History.RegisterConverter(new TrileEmplacementConverter());
         History.Track(level);
         History.StateChanged += () => _queueRevisualization = true;
@@ -130,7 +135,6 @@ public class EddyEditor : EditorComponent, IEddyEditor
             _contexts.Add(new GomezContext(Game, _level, this));
             _contexts.Add(new VolumeContext(Game, _level, this));
             _contexts.Add(new PathContext(Game, _level, this));
-            _contexts.Add(new ScriptContext(Game, _level, this));
             _contexts.Add(defaultCtx);
 
             defaultCtx.Revisualize();
@@ -252,6 +256,24 @@ public class EddyEditor : EditorComponent, IEddyEditor
             {
                 InstanceBrowser.Draw();
                 ImGui.End();
+            }
+        }
+
+        if (_showScriptBrowser)
+        {
+            SelectedContext = EddyContext.Script;
+
+            const ImGuiWindowFlags flags = ImGuiWindowFlags.NoCollapse;
+            ImGuiX.SetNextWindowSize(new Vector2(500, 400), ImGuiCond.FirstUseEver);
+            if (ImGui.Begin("Script Browser", ref _showScriptBrowser, flags))
+            {
+                _scriptBrowser.Draw();
+                ImGui.End();
+            }
+
+            if (!_showScriptBrowser)
+            {
+                SelectedContext = EddyContext.Default;
             }
         }
     }
@@ -378,7 +400,14 @@ public class EddyEditor : EditorComponent, IEddyEditor
         {
             _showInstanceBrowser = true;
         }
+        ImGui.EndDisabled();
 
+        ImGui.SameLine();
+        ImGui.BeginDisabled(_showScriptBrowser);
+        if (ImGui.Button($"{Lucide.CodeXml} Scripts"))
+        {
+            _showScriptBrowser = true;
+        }
         ImGui.EndDisabled();
 
         ImGui.SameLine();
@@ -396,18 +425,12 @@ public class EddyEditor : EditorComponent, IEddyEditor
             });
         }
 
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip("Export as diorama");
-        }
-
         ImGui.SameLine();
         ImGui.BeginDisabled(_showProperties);
         if (ImGui.Button($"{Icons.SymbolProperty} Properties"))
         {
             _showProperties = true;
         }
-
         ImGui.EndDisabled();
 
         ImGui.SameLine();

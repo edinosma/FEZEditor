@@ -1,4 +1,5 @@
 ﻿using FezEditor.Components;
+using FezEditor.Scripting;
 using FezEditor.Services;
 using FezEditor.Tools;
 using Microsoft.Xna.Framework;
@@ -71,6 +72,7 @@ public class FezEditor : Game
     protected override void Initialize()
     {
         Logger.Information("Version - {0}", Version);
+        Logger.Information("Scripts - {0} entities", ScriptingApi.Entries.Length); // inits collection
         RepackerExtensions.Gd = GraphicsDevice;
 
         _appStorage = this.CreateService<AppStorageService>();
