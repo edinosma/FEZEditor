@@ -45,6 +45,8 @@ public class EddyEditor : EditorComponent, IEddyEditor
 
     public Dirty<EddyVisuals> Visuals { get; set; } = new(EddyVisuals.Default);
 
+    public object? Pending { get; set; }
+
     private readonly Level _level;
 
     private Actor _cameraActor = null!;

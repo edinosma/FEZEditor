@@ -38,5 +38,7 @@ internal interface IEddyEditor
 
     Dirty<EddyVisuals> Visuals { get; set; }
 
+    object? Pending { get; set; }
+
     void FocusOn(Vector3 target);
 }

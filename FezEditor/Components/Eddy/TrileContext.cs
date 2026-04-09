@@ -1120,7 +1120,14 @@ internal sealed class TrileContext : BaseContext
 
         if (group.Path != null)
         {
-            ImGui.TextDisabled($"Path: {group.Path.Segments.Count} segments");
+            ImGui.SeparatorText("Path");
+            ImGui.TextDisabled($"{group.Path.Segments.Count} segment(s)");
+            if (ImGui.Button("Edit Path##GroupPath"))
+            {
+                Eddy.Pending = new PathContext.Pending(id, IsGroup: true);
+                Eddy.SelectedContext = EddyContext.Path;
+                Eddy.Tool = EddyTool.Select;
+            }
         }
     }
 
