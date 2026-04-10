@@ -1391,6 +1391,10 @@ internal sealed class TrileContext : BaseContext
             sizeZ = 1;
         }
 
+        var trileId = _set!.Triles
+            .FirstOrDefault(kv => kv.Value.Geometry.Vertices.Length > 0)
+            .Key;
+
         for (var x = 0; x < sizeX; x++)
         {
             for (var z = 0; z < sizeZ; z++)
@@ -1399,7 +1403,7 @@ internal sealed class TrileContext : BaseContext
                 var instance = new TrileInstance
                 {
                     Position = new Vector3(x, 0, z).ToRepacker(),
-                    TrileId = InvalidId,
+                    TrileId = trileId,
                     PhiLight = 0
                 };
 
@@ -1408,14 +1412,14 @@ internal sealed class TrileContext : BaseContext
         }
 
         TrilesMesh mesh;
-        if (!_trileActors.TryGetValue(InvalidId, out var actor))
+        if (!_trileActors.TryGetValue(trileId, out var actor))
         {
             actor = CreateSubActor();
             actor.Name = "Placeholder";
-            _trileActors[InvalidId] = actor;
+            _trileActors[trileId] = actor;
 
             mesh = actor.AddComponent<TrilesMesh>();
-            mesh.Visualize(_set!, InvalidId);
+            mesh.Visualize(_set!, trileId);
         }
 
         mesh = actor.GetComponent<TrilesMesh>();

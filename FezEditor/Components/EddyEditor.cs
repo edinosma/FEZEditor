@@ -2,7 +2,9 @@ using FezEditor.Actors;
 using FezEditor.Components.Eddy;
 using FezEditor.Structure;
 using FezEditor.Tools;
+using FEZRepacker.Core.Definitions.Game.Common;
 using FEZRepacker.Core.Definitions.Game.Level;
+using FEZRepacker.Core.Definitions.Game.TrileSet;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Quaternion = Microsoft.Xna.Framework.Quaternion;
@@ -648,4 +650,48 @@ public class EddyEditor : EditorComponent, IEddyEditor
     }
 
     private readonly record struct PerspectiveState(Vector3 Position, Quaternion Rotation, Vector3 Offset);
+
+    public static Level Create(string name, TrileSet trileSet)
+    {
+        var level = new Level
+        {
+            Name = name,
+            TrileSetName = trileSet.Name,
+            SkyName = "Default",
+            Size = new RVector3(16, 16, 16),
+            StartingFace = new TrileFace
+            {
+                Id = new TrileEmplacement(0, 0, 0),
+                Face = FaceOrientation.Front
+            }
+        };
+
+        var trileId = -1;
+        foreach (var (id, trile) in trileSet.Triles)
+        {
+            if (trile.Geometry.Vertices.Length > 0)
+            {
+                trileId = id;
+                break;
+            }
+        }
+
+        for (var x = 0; x < level.Size.X; x++)
+        {
+            for (var z = 0; z < level.Size.Y; z++)
+            {
+                var emplacement = new TrileEmplacement(x, 0, z);
+                var instance = new TrileInstance
+                {
+                    Position = new Vector3(x, 0, z).ToRepacker(),
+                    TrileId = trileId,
+                    PhiLight = 0
+                };
+
+                level.Triles[emplacement] = instance;
+            }
+        }
+
+        return level;
+    }
 }

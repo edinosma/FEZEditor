@@ -70,30 +70,15 @@ public class TrilesMesh : ActorComponent, IPickable
     public void Visualize(TrileSet trileSet, int id)
     {
         _texture?.Dispose();
-        if (id <= -1)
-        {
-            _texture = new Texture2D(_rendering.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
-            _texture.SetData(new[] { Color.White });
-            _rendering.MaterialAssignBaseTexture(_material, _texture);
+        _texture = RepackerExtensions.ConvertToTexture2D(trileSet.TextureAtlas);
+        _rendering.MaterialAssignBaseTexture(_material, _texture);
 
-            _size = Vector3.One;
-            HasGeometry = true;
+        var trile = trileSet.Triles[id];
+        _size = trile.Size.ToXna();
+        HasGeometry = trile.Geometry.Indices.Length > 0;
 
-            var surface = MeshSurface.CreateTexturedBox(Vector3.One);
-            _rendering.MeshAddSurface(_mesh, PrimitiveType.TriangleList, surface, _material);
-        }
-        else
-        {
-            _texture = RepackerExtensions.ConvertToTexture2D(trileSet.TextureAtlas);
-            _rendering.MaterialAssignBaseTexture(_material, _texture);
-
-            var trile = trileSet.Triles[id];
-            _size = trile.Size.ToXna();
-            HasGeometry = trile.Geometry.Indices.Length > 0;
-
-            var surface = RepackerExtensions.ConvertToMesh(trile.Geometry.Vertices, trile.Geometry.Indices);
-            _rendering.MeshAddSurface(_mesh, PrimitiveType.TriangleList, surface, _material);
-        }
+        var surface = RepackerExtensions.ConvertToMesh(trile.Geometry.Vertices, trile.Geometry.Indices);
+        _rendering.MeshAddSurface(_mesh, PrimitiveType.TriangleList, surface, _material);
     }
 
     public TrileEmplacement GetEmplacement(int index)

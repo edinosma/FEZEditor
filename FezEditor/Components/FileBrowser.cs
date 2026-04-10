@@ -1,6 +1,8 @@
 ﻿using FezEditor.Services;
 using FezEditor.Structure;
 using FezEditor.Tools;
+using FEZRepacker.Core.Definitions.Game.Level;
+using FEZRepacker.Core.Definitions.Game.TrileSet;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 
@@ -468,6 +470,31 @@ public class FileBrowser : DrawableGameComponent
             Title = "Create New " + assetType.Name,
             Filters = [new FileDialog.Filter(assetType.Name, extension)]
         };
+
+        if (assetType == typeof(Level))
+        {
+            var options2 = new FileDialog.Options
+            {
+                Title = "Select Trile Set...",
+                Filters = [new FileDialog.Filter("Trile Set", "fezts.glb")]
+            };
+
+            FileDialog.Show(FileDialog.Type.OpenFile, files =>
+            {
+                FileDialog.Show(FileDialog.Type.SaveFile, files2 =>
+                {
+                    var path = _resourceService.GetRelativePath(files[0].Replace(".fezts.glb", ""));
+                    var trileSet = (TrileSet)_resourceService.Load(path);
+
+                    var path2 = _resourceService.GetRelativePath(files2[0]);
+                    var asset = EddyEditor.Create(defaultName, trileSet);
+
+                    _resourceService.Save(path2, asset);
+                }, options);
+            }, options2);
+
+            return;
+        }
 
         FileDialog.Show(FileDialog.Type.SaveFile, files =>
         {
