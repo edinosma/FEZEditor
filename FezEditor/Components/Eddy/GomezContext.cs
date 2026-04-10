@@ -259,6 +259,7 @@ internal class GomezContext : BaseContext
             _gomezActor.Transform.Rotation = Level.StartingFace.Face.AsQuaternion();
 
             var mesh = _gomezActor.AddComponent<NpcMesh>();
+            mesh.Billboard = false;
             var animations = ResourceService.LoadAnimations("Character Animations/Gomez");
             mesh.Visualize(animations, "IdleWink");
         }

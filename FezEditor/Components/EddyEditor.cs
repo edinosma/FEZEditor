@@ -161,9 +161,9 @@ public class EddyEditor : EditorComponent, IEddyEditor
             gizmo.Camera = _cameraActor.GetComponent<Camera>();
         }
 
-        var position = _level.StartingFace.Id.ToXna().ToVector3();
-        position += (Vector3.Up * 1.5f) + _level.StartingFace.Face.AsVector() * 10f;
-        _cameraActor.Transform.Position = position;
+        var gomezPos = _level.StartingFace.Id.ToXna().ToVector3() + Vector3.Up * 1.5f;
+        var approachDir = _level.StartingFace.Face.AsVector();
+        _cameraActor.GetComponent<FirstPersonControl>().FocusOn(gomezPos, approachDir, 10f);
     }
 
     public override void Draw()

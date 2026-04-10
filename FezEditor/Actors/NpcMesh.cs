@@ -13,6 +13,8 @@ public class NpcMesh : ActorComponent, IPickable
 
     public bool Pickable { get; set; } = true;
 
+    public bool Billboard { get; set; } = true;
+
     private readonly RenderingService _rendering;
 
     private readonly Rid _mesh;
@@ -108,8 +110,12 @@ public class NpcMesh : ActorComponent, IPickable
             _frameElapsed = TimeSpan.Zero;
         }
 
-        var viewMatrix = _rendering.CameraGetView(_camera);
-        _transform.Rotation = Mathz.CreateYBillboard(viewMatrix, _transform.Position);
+        if (Billboard)
+        {
+            var viewMatrix = _rendering.CameraGetView(_camera);
+            _transform.Rotation = Mathz.CreateYBillboard(viewMatrix, _transform.Position);
+        }
+
         _transform.Scale = data.Scale;
     }
 
