@@ -8,9 +8,9 @@ namespace FezEditor.Actors;
 
 public class BoundsMesh : ActorComponent
 {
-    public Dirty<Color> WireColor { get; set; } = new(Color.White);
+    private static readonly Color WireColor = Color.White;
 
-    public Dirty<Vector3> Size { get; set; } = new(Vector3.Zero);
+    public Vector3 Size { get; set; } = Vector3.Zero;
 
     private readonly RenderingService _rendering;
 
@@ -42,16 +42,10 @@ public class BoundsMesh : ActorComponent
 
     public override void Update(GameTime gameTime)
     {
-        if (WireColor.IsDirty || Size.IsDirty)
-        {
-            var surface = MeshSurface.CreateWireframeBox(Size.Value, WireColor.Value);
-            _rendering.MeshClear(_mesh);
-            _rendering.MeshAddSurface(_mesh, PrimitiveType.LineList, surface, _material);
-            Size = Size.Clean();
-            WireColor = WireColor.Clean();
-        }
-
-        _rendering.InstanceSetPosition(_instance, _transform.Position + Size.Value / 2f);
+        var surface = MeshSurface.CreateWireframeBox(Size, WireColor);
+        _rendering.MeshClear(_mesh);
+        _rendering.MeshAddSurface(_mesh, PrimitiveType.LineList, surface, _material);
+        _rendering.InstanceSetPosition(_instance, _transform.Position + Size / 2f);
     }
 
     public override void Dispose()

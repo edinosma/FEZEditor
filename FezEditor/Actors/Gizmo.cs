@@ -38,6 +38,8 @@ public class Gizmo : ActorComponent
 
     private static readonly Color ColorFaceBright = new(255, 255, 140);
 
+    private static readonly Color ColorFaceDisabled = new(120, 120, 120);
+
     private const float GizmoScreenSize = 80f; // desired on-screen size in pixels
 
     private const float ArrowShaftLength = 0.75f;
@@ -309,7 +311,7 @@ public class Gizmo : ActorComponent
         return changed;
     }
 
-    public bool ScaleFace(Vector3 origin, FaceOrientation face, out float delta)
+    public bool ScaleFace(Vector3 origin, FaceOrientation face, out float delta, bool disabled = false)
     {
         _status.AddHints(
             ("LMB Drag", "Add / Remove Trile")
@@ -326,50 +328,58 @@ public class Gizmo : ActorComponent
         var leftClicked = leftDown && !_wasLeftPressed;
         var leftReleased = !leftDown && _wasLeftPressed;
 
-        if (leftClicked && _activeHandle == Handle.None)
+        if (!disabled)
         {
-            var ray = GetMouseRay();
-            if (HitTestSphere(ray, tipPos, PickRadius * gizmoScale))
+            if (leftClicked && _activeHandle == Handle.None)
             {
-                _activeHandle = Handle.Face;
-                _dragPlaneNormal = Vector3.Normalize(Camera.Position - origin);
-                _dragPlaneOrigin = tipPos;
-                _dragStartHitPoint = RayPlaneIntersect(ray, _dragPlaneOrigin, _dragPlaneNormal) ?? tipPos;
-                DragStarted = true;
+                var ray = GetMouseRay();
+                if (HitTestSphere(ray, tipPos, PickRadius * gizmoScale))
+                {
+                    _activeHandle = Handle.Face;
+                    _dragPlaneNormal = Vector3.Normalize(Camera.Position - origin);
+                    _dragPlaneOrigin = tipPos;
+                    _dragStartHitPoint = RayPlaneIntersect(ray, _dragPlaneOrigin, _dragPlaneNormal) ?? tipPos;
+                    DragStarted = true;
+                }
+            }
+            else
+            {
+                DragStarted = false;
+            }
+
+            DragEnded = false;
+            if (_activeHandle == Handle.Face)
+            {
+                if (leftDown)
+                {
+                    var hitPoint = RayPlaneIntersect(GetMouseRay(), _dragPlaneOrigin, _dragPlaneNormal);
+                    if (hitPoint.HasValue)
+                    {
+                        delta = Vector3.Dot(hitPoint.Value - _dragStartHitPoint, faceNormal);
+                        changed = true;
+                    }
+                }
+
+                if (leftReleased)
+                {
+                    _activeHandle = Handle.None;
+                    DragEnded = true;
+                }
+            }
+
+            _hoveredHandle = Handle.None;
+            if (_activeHandle == Handle.None && HitTestSphere(GetMouseRay(), tipPos, PickRadius * gizmoScale))
+            {
+                _hoveredHandle = Handle.Face;
             }
         }
         else
         {
             DragStarted = false;
+            DragEnded = false;
         }
 
-        DragEnded = false;
-        if (_activeHandle == Handle.Face)
-        {
-            if (leftDown)
-            {
-                var hitPoint = RayPlaneIntersect(GetMouseRay(), _dragPlaneOrigin, _dragPlaneNormal);
-                if (hitPoint.HasValue)
-                {
-                    delta = Vector3.Dot(hitPoint.Value - _dragStartHitPoint, faceNormal);
-                    changed = true;
-                }
-            }
-
-            if (leftReleased)
-            {
-                _activeHandle = Handle.None;
-                DragEnded = true;
-            }
-        }
-
-        _hoveredHandle = Handle.None;
-        if (_activeHandle == Handle.None && HitTestSphere(GetMouseRay(), tipPos, PickRadius * gizmoScale))
-        {
-            _hoveredHandle = Handle.Face;
-        }
-
-        RebuildFaceMesh(origin, faceNormal, gizmoScale);
+        RebuildFaceMesh(origin, faceNormal, gizmoScale, disabled);
         _wasLeftPressed = leftDown;
         return changed;
     }
@@ -731,14 +741,22 @@ public class Gizmo : ActorComponent
         _rendering.InstanceSetVisibility(Actor.InstanceRid, true);
     }
 
-    private void RebuildFaceMesh(Vector3 origin, Vector3 faceNormal, float scale)
+    private void RebuildFaceMesh(Vector3 origin, Vector3 faceNormal, float scale, bool disabled = false)
     {
         _rendering.MeshClear(_mesh);
         Actor.Transform.Position = origin;
         Actor.Transform.Rotation = Quaternion.Identity;
         Actor.Transform.Scale = Vector3.One * scale;
 
-        _face.SetColor(_rendering, _hoveredHandle == Handle.Face);
+        if (disabled)
+        {
+            _rendering.MaterialSetAlbedo(_face.Mat, ColorFaceDisabled);
+        }
+        else
+        {
+            _face.SetColor(_rendering, _hoveredHandle == Handle.Face);
+        }
+
         var arrow = MeshSurface.CreateArrow(faceNormal,
             ArrowSidesTranslate, ArrowShaftLength, ArrowShaftRadius, ArrowTipLength, ArrowTipRadius);
         _rendering.MeshAddSurface(_mesh, PrimitiveType.TriangleList, arrow, _face.Mat);

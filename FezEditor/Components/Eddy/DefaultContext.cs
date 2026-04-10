@@ -354,6 +354,11 @@ internal class DefaultContext : BaseContext
     {
         if (partial)
         {
+            if (_boundsActor!.TryGetComponent<BoundsMesh>(out var boundsMesh))
+            {
+                boundsMesh!.Size = Level.Size.ToXna();
+            }
+
             if (Eddy.SelectedContext != EddyContext.Default)
             {
                 return;
@@ -368,11 +373,6 @@ internal class DefaultContext : BaseContext
                 visualizer!.LevelSize = Level.Size.ToXna();
                 visualizer.Visualize(_sky);
                 visualizer.VisualizeShadows(_sky.Name, _sky.Shadows);
-            }
-
-            if (_boundsActor!.TryGetComponent<BoundsMesh>(out var boundsMesh))
-            {
-                boundsMesh!.Size = Level.Size.ToXna();
             }
 
             if (Level.WaterType == LiquidType.None && _liquidActor != null)

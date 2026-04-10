@@ -36,6 +36,8 @@ internal sealed class TrileContext : BaseContext
 
     private readonly Dictionary<int, HashSet<TrileEmplacement>> _groupEmplacements = new();
 
+    private BoundingBox _levelBounds = new();
+
     public TrileContext(Game game, Level level, IEddyEditor eddy) : base(game, level, eddy)
     {
     }
@@ -482,7 +484,12 @@ internal sealed class TrileContext : BaseContext
         }
 
         var centroid = ComputeSelectionCentroid();
-        if (Eddy.Gizmo.ScaleFace(centroid, _selectedCursor.Face.Value, out var delta))
+        var faceVec = _selectedCursor.Face.Value.AsVector();
+        var disabled = faceVec.X < 0 && _levelBounds.Min.X <= 0 ||
+                       faceVec.Y < 0 && _levelBounds.Min.Y <= 0 ||
+                       faceVec.Z < 0 && _levelBounds.Min.Z <= 0;
+
+        if (Eddy.Gizmo.ScaleFace(centroid, _selectedCursor.Face.Value, out var delta, disabled))
         {
             var steps = (int)MathF.Round(delta);
             if (steps != _scale.PreviousSteps)
@@ -508,6 +515,12 @@ internal sealed class TrileContext : BaseContext
                         entry.Emp.X + _scale.Dx * op.Step,
                         entry.Emp.Y + _scale.Dy * op.Step,
                         entry.Emp.Z + _scale.Dz * op.Step);
+
+                    if (target.X < 0 || target.Y < 0 || target.Z < 0)
+                    {
+                        continue;
+                    }
+
                     if (Level.Triles.ContainsKey(target))
                     {
                         continue;
@@ -519,7 +532,14 @@ internal sealed class TrileContext : BaseContext
                         TrileId = entry.TrileId,
                         PhiLight = entry.PhiLight
                     };
+
                     Level.Triles[target] = instance;
+
+                    var v = new Vector3(target.X, target.Y, target.Z);
+                    var min = Vector3.Min(_levelBounds.Min, v);
+                    var max = Vector3.Max(_levelBounds.Max, v);
+                    ComputeLevelBounds(min, max);
+
                     if (_selectedCursor.GroupId != null)
                     {
                         AddToGroup(_selectedCursor.GroupId.Value, target, instance);
@@ -575,10 +595,10 @@ internal sealed class TrileContext : BaseContext
             _scaleScope = Eddy.History.BeginScope("Scale Triles");
             _scale = new ScaleState();
 
-            var faceVec = _selectedCursor.Face.Value.AsVector();
-            _scale.Dx = (int)faceVec.X;
-            _scale.Dy = (int)faceVec.Y;
-            _scale.Dz = (int)faceVec.Z;
+            var faceVec1 = _selectedCursor.Face.Value.AsVector();
+            _scale.Dx = (int)faceVec1.X;
+            _scale.Dy = (int)faceVec1.Y;
+            _scale.Dz = (int)faceVec1.Z;
 
             foreach (var emplacement in _selectedCursor.Emplacements)
             {
@@ -707,6 +727,23 @@ internal sealed class TrileContext : BaseContext
 
     public override void Revisualize(bool partial = false)
     {
+        if (Level.Triles.Count != 0)
+        {
+            var min = new Vector3(float.MaxValue);
+            var max = new Vector3(float.MinValue);
+            foreach (var emp1 in Level.Triles.Keys)
+            {
+                min = Vector3.Min(min, new Vector3(emp1.X, emp1.Y, emp1.Z));
+                max = Vector3.Max(max, new Vector3(emp1.X, emp1.Y, emp1.Z));
+            }
+
+            ComputeLevelBounds(min, max);
+        }
+        else
+        {
+            _levelBounds = new BoundingBox(Vector3.Zero, Vector3.Zero);
+        }
+
         if (partial)
         {
             if (Eddy.SelectedContext != EddyContext.Trile)
@@ -1349,6 +1386,22 @@ internal sealed class TrileContext : BaseContext
         mesh.Visualize(_set, trileId);
 
         return actor;
+    }
+
+    private void ComputeLevelBounds(Vector3 min, Vector3 max)
+    {
+        _levelBounds = new BoundingBox(min, max);
+        var size = (max - min + Vector3.One).ToRepacker();
+
+        var expanded = new RVector3(
+            Math.Max(Level.Size.X, size.X),
+            Math.Max(Level.Size.Y, size.Y),
+            Math.Max(Level.Size.Z, size.Z));
+
+        if (Level.Size != expanded)
+        {
+            Level.Size = expanded;
+        }
     }
 
     private void UpdateCollisionMesh()
