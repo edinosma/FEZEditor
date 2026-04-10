@@ -71,6 +71,8 @@ public class EddyEditor : EditorComponent, IEddyEditor
 
     private bool _showScriptBrowser;
 
+    private bool _showRaycastDebug;
+
     private bool _queueRevisualization;
 
     public EddyEditor(Game game, string title, Level level) : base(game, title)
@@ -213,7 +215,10 @@ public class EddyEditor : EditorComponent, IEddyEditor
 
                 ImGuiX.DrawStats(viewportMin + new Vector2(8, 8), RenderingService.GetStats());
 
-                DrawRaycastDebug(viewportMin + new Vector2(8, size.Y - 8f));
+                if (_showRaycastDebug)
+                {
+                    DrawRaycastDebug(viewportMin + new Vector2(8, size.Y - 8f));
+                }
 
                 var topCenter = viewportMin + new Vector2(size.X / 2f, 8f);
                 ImGuiX.DrawClock(topCenter, Clock);
@@ -354,92 +359,107 @@ public class EddyEditor : EditorComponent, IEddyEditor
         DrawToolButton(Lucide.Pipette, EddyTool.Pick);
 
         ImGui.SameLine();
-        ImGui.BeginDisabled(_showAssetBrowser);
-        if (ImGui.Button($"{Lucide.Palette}"))
         {
-            _showAssetBrowser = true;
-        }
+            ImGui.BeginDisabled(_showAssetBrowser);
+            if (ImGui.Button($"{Lucide.Sprout}"))
+            {
+                _showAssetBrowser = true;
+            }
+            ImGui.EndDisabled();
 
-        ImGui.EndDisabled();
-
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip("Asset Browser");
-        }
-
-        ImGui.SameLine();
-        if (ImGui.Button($"{Lucide.SquareDashed}##PlaceVolume"))
-        {
-            Tool = EddyTool.Paint;
-            SelectedContext = EddyContext.Volume;
-        }
-
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip("Place Volume");
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("Asset Browser");
+            }
         }
 
         ImGui.SameLine();
-        if (ImGui.Button($"{Lucide.Route}##PlacePath"))
         {
-            Tool = EddyTool.Paint;
-            SelectedContext = EddyContext.Path;
+            if (ImGui.Button($"{Lucide.SquareDashed}"))
+            {
+                Tool = EddyTool.Paint;
+                SelectedContext = EddyContext.Volume;
+            }
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("Place Volume");
+            }
         }
 
-        if (ImGui.IsItemHovered())
+
+        ImGui.SameLine();
         {
-            ImGui.SetTooltip("Place Path");
+            if (ImGui.Button($"{Lucide.Route}"))
+            {
+                Tool = EddyTool.Paint;
+                SelectedContext = EddyContext.Path;
+            }
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("Place Path");
+            }
         }
 
         ImGui.SameLine();
         ImGui.TextDisabled("|");
 
         ImGui.SameLine();
-        ImGui.BeginDisabled(_showInstanceBrowser);
-        if (ImGui.Button($"{Lucide.List} Instances"))
         {
-            _showInstanceBrowser = true;
-        }
-        ImGui.EndDisabled();
-
-        ImGui.SameLine();
-        ImGui.BeginDisabled(_showScriptBrowser);
-        if (ImGui.Button($"{Lucide.CodeXml} Scripts"))
-        {
-            _showScriptBrowser = true;
-        }
-        ImGui.EndDisabled();
-
-        ImGui.SameLine();
-        if (ImGui.Button($"{Icons.Export} Diorama"))
-        {
-            FileDialog.Show(FileDialog.Type.SaveFile, files =>
+            ImGui.BeginDisabled(_showInstanceBrowser);
+            if (ImGui.Button($"{Lucide.Trees}"))
             {
-                var exporter = new PhilExporter(Game, _level, files[0]);
-                Game.AddComponent(exporter);
-            }, new FileDialog.Options
+                _showInstanceBrowser = true;
+            }
+            ImGui.EndDisabled();
+
+            if (ImGui.IsItemHovered())
             {
-                Title = "Export level diorama",
-                DefaultLocation = Path.Combine(ResourceService.GetFullPath(""), $"{_level.Name}.glb"),
-                Filters = [new FileDialog.Filter("GLB file", "glb")]
-            });
+                ImGui.SetTooltip("Instance Browser");
+            }
         }
 
         ImGui.SameLine();
-        ImGui.BeginDisabled(_showProperties);
-        if (ImGui.Button($"{Icons.SymbolProperty} Properties"))
         {
-            _showProperties = true;
+            ImGui.BeginDisabled(_showScriptBrowser);
+            if (ImGui.Button($"{Lucide.CodeXml}"))
+            {
+                _showScriptBrowser = true;
+            }
+            ImGui.EndDisabled();
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("Script Browser");
+            }
         }
-        ImGui.EndDisabled();
 
         ImGui.SameLine();
+        {
+            ImGui.BeginDisabled(_showProperties);
+            if (ImGui.Button($"{Lucide.List}"))
+            {
+                _showProperties = true;
+            }
+            ImGui.EndDisabled();
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("Show Properties Window");
+            }
+        }
+
         DrawViewOptions();
     }
 
     private void DrawViewOptions()
     {
-        if (ImGui.Button($"{Icons.KebabVertical} {_viewMode}"))
+        var text = $"{Icons.KebabVertical} {_viewMode}";
+        var viewButtonWidth = ImGui.CalcTextSize(text).X + ImGui.GetStyle().FramePadding.X * 2;
+        ImGui.SameLine(ImGui.GetContentRegionMax().X - viewButtonWidth);
+
+        if (ImGui.Button(text))
         {
             ImGui.OpenPopup("##ViewOptions");
         }
@@ -490,6 +510,23 @@ public class EddyEditor : EditorComponent, IEddyEditor
                 edited |= ImGui.CheckboxFlags("Sky", ref visuals, (int)EddyVisuals.Sky);
                 edited |= ImGui.CheckboxFlags("Gomez", ref visuals, (int)EddyVisuals.Gomez);
                 if (edited) Visuals = (EddyVisuals)visuals;
+            }
+
+            ImGui.Separator();
+            ImGui.Checkbox("Raycast Debug", ref _showRaycastDebug);
+
+            if (ImGui.Button("Export as Diorama"))
+            {
+                FileDialog.Show(FileDialog.Type.SaveFile, files =>
+                {
+                    var exporter = new PhilExporter(Game, _level, files[0]);
+                    Game.AddComponent(exporter);
+                }, new FileDialog.Options
+                {
+                    Title = "Export level diorama",
+                    DefaultLocation = Path.Combine(ResourceService.GetFullPath(""), $"{_level.Name}.glb"),
+                    Filters = [new FileDialog.Filter("GLB file", "glb")]
+                });
             }
 
             ImGui.EndPopup();
