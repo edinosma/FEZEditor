@@ -3,6 +3,7 @@ using FezEditor.Structure;
 using FezEditor.Tools;
 using FEZRepacker.Core.Definitions.Game.Level;
 using FezEditor.Scripting;
+using FezEditor.Services;
 using FEZRepacker.Core.Definitions.Game.Level.Scripting;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -29,6 +30,8 @@ internal class ScriptBrowser : IDisposable
 
     private readonly IEddyEditor _eddy;
 
+    private readonly InputService _input;
+
     private readonly ConfirmWindow _confirm;
 
     private Script? _script;
@@ -48,6 +51,7 @@ internal class ScriptBrowser : IDisposable
         _game = game;
         _level = level;
         _eddy = eddy;
+        _input = game.GetService<InputService>();
         game.AddComponent(_confirm = new ConfirmWindow(game));
     }
 
@@ -84,6 +88,9 @@ internal class ScriptBrowser : IDisposable
 
     private void DrawTable()
     {
+        // Disable mouse capturing for calling context menu via RMB
+        _input.CaptureMouse(false);
+
         if (ImGui.BeginTable("##ScriptList", Columns,
                 ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.Sortable | ImGuiTableFlags.ScrollY))
         {
@@ -268,6 +275,7 @@ internal class ScriptBrowser : IDisposable
                 _script.Timeout = TimeSpan.FromSeconds(timeout);
             }
         }
+
         ImGui.EndDisabled();
 
         ImGui.SameLine();
@@ -291,6 +299,7 @@ internal class ScriptBrowser : IDisposable
                 _script.LevelWideOneTime = levelWideOnly;
             }
         }
+
         ImGui.EndDisabled();
 
         ImGui.SameLine();

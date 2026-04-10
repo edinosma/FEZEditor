@@ -123,17 +123,17 @@ public class InputService
 
     public bool IsRightMousePressed()
     {
-        return !ImGui.GetIO().WantCaptureMouse && _currentMouseState.RightButton == ButtonState.Pressed;
+        return _currentMouseState.RightButton == ButtonState.Pressed;
     }
 
     public bool IsMiddleMousePressed()
     {
-        return !ImGui.GetIO().WantCaptureMouse && _currentMouseState.MiddleButton == ButtonState.Pressed;
+        return _currentMouseState.MiddleButton == ButtonState.Pressed;
     }
 
     public bool IsLeftMousePressed()
     {
-        return !ImGui.GetIO().WantCaptureMouse && _currentMouseState.LeftButton == ButtonState.Pressed;
+        return _currentMouseState.LeftButton == ButtonState.Pressed;
     }
 
     public Vector2 GetMousePosition()
@@ -166,7 +166,6 @@ public class InputService
     public void CaptureMouse(bool captured)
     {
         _mouseCaptured = captured;
-        ImGui.GetIO().WantCaptureMouse = !captured;
         _game.IsMouseVisible = !captured;
     }
 
