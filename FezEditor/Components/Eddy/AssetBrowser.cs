@@ -61,6 +61,7 @@ public class AssetBrowser : IDisposable
     {
         _resources = game.GetService<ResourceService>();
         _resources.ProviderChanged += OnProviderChanged;
+        _resources.ProviderReset += OnProviderReset;
         s_instanceCount++;
     }
 
@@ -464,6 +465,7 @@ public class AssetBrowser : IDisposable
     {
         GC.SuppressFinalize(this);
         _resources.ProviderChanged -= OnProviderChanged;
+        _resources.ProviderReset -= OnProviderReset;
 
         s_instanceCount--;
         if (s_instanceCount <= 0)
@@ -670,6 +672,10 @@ public class AssetBrowser : IDisposable
     {
         _entries.Clear();
         _pendingQueue.Clear();
+    }
+
+    private void OnProviderReset()
+    {
         _recentEntries.Clear();
         _selectedEntry = default;
         _selectionDirtyType = null;

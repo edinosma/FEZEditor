@@ -14,6 +14,8 @@ public class ResourceService : IDisposable
 
     public event Action? ProviderChanged;
 
+    public event Action? ProviderReset;
+
     public bool HasNoProvider => _provider == null;
 
     public bool IsReadonly => _provider?.IsReadonly ?? true;
@@ -60,6 +62,7 @@ public class ResourceService : IDisposable
 
         CloseProvider();
         _provider = provider;
+        ProviderReset?.Invoke();
         ProviderChanged?.Invoke();
         Logger.Information("Opened {0} at {1} with {2} file(s)",
             provider.GetType().Name, info.FullName, provider.Files.Count());
@@ -67,6 +70,7 @@ public class ResourceService : IDisposable
 
     public void CloseProvider()
     {
+        ProviderReset?.Invoke();
         ProviderChanged?.Invoke();
         _cache.Clear();
         _provider?.Dispose();
