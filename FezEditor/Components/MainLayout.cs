@@ -10,6 +10,8 @@ public class MainLayout : DrawableGameComponent
 {
     private const float DefaultLeftPaneWidth = 250f;
 
+    public bool ShowFileBrowser { get; set; } = true;
+
     private readonly EditorService _editorService;
 
     private readonly StatusService _statusService;
@@ -68,6 +70,7 @@ public class MainLayout : DrawableGameComponent
             // Region: Left pane + Right pane
             {
                 // Left pane - File Browser (resizable horizontally)
+                if (ShowFileBrowser)
                 {
                     ImGuiX.BeginChild("LeftPane", new Vector2(DefaultLeftPaneWidth, 0),
                         ImGuiChildFlags.Border | ImGuiChildFlags.ResizeX);

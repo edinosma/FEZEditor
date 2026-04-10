@@ -23,6 +23,8 @@ public class MenuBar : DrawableGameComponent
 
     private readonly AppStorageService _storageService;
 
+    private MainLayout _mainLayout = null!;
+
     public MenuBar(Game game) : base(game)
     {
         game.AddComponent(_confirmWindow = new ConfirmWindow(game));
@@ -41,6 +43,7 @@ public class MenuBar : DrawableGameComponent
     protected override void LoadContent()
     {
         _logoTexture = Game.Content.Load<Texture2D>("Icon");
+        _mainLayout = Game.GetComponent<MainLayout>();
     }
 
     public override void Update(GameTime gameTime)
@@ -151,6 +154,16 @@ public class MenuBar : DrawableGameComponent
                 if (ImGui.MenuItem("Quit", shortcut))
                 {
                     ShowQuitDialog();
+                }
+
+                ImGui.EndMenu();
+            }
+
+            if (ImGui.BeginMenu("View"))
+            {
+                if (ImGui.MenuItem("File Browser", null, _mainLayout.ShowFileBrowser))
+                {
+                    _mainLayout.ShowFileBrowser = !_mainLayout.ShowFileBrowser;
                 }
 
                 ImGui.EndMenu();
