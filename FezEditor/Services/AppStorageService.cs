@@ -69,6 +69,14 @@ public class AppStorageService : IDisposable
         }
     }
 
+    public void PruneRecentFiles(string provider, Func<string, bool> exists)
+    {
+        if (_data.RecentFiles.TryGetValue(provider, out var list))
+        {
+            list.RemoveAll(p => !exists(p));
+        }
+    }
+
     public void ClearRecentPaths()
     {
         _data.RecentProviders.Clear();

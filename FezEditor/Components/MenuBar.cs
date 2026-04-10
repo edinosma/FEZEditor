@@ -32,12 +32,22 @@ public class MenuBar : DrawableGameComponent
         _resourceService = game.GetService<ResourceService>();
         _inputService = game.GetService<InputService>();
         _storageService = game.GetService<AppStorageService>();
+        _resourceService.ProviderChanged += OnProviderChanged;
     }
 
     protected override void Dispose(bool disposing)
     {
+        _resourceService.ProviderChanged -= OnProviderChanged;
         _confirmWindow.Dispose();
         _aboutWindow?.Dispose();
+    }
+
+    private void OnProviderChanged()
+    {
+        if (!_resourceService.HasNoProvider)
+        {
+            _storageService.PruneRecentFiles(_resourceService.Root, _resourceService.Exists);
+        }
     }
 
     protected override void LoadContent()
