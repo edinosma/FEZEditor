@@ -300,6 +300,11 @@ public class EddyEditor : EditorComponent, IEddyEditor
 
     private void SwitchToPerspective()
     {
+        if (_viewMode == ViewMode.Perspective)
+        {
+            return;
+        }
+
         _viewMode = ViewMode.Perspective;
         _cameraActor.RemoveComponent<MapPanControl>();
         _cameraActor.RemoveComponent<MapZoomControl>();
