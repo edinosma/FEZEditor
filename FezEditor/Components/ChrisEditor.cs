@@ -209,8 +209,6 @@ public class ChrisEditor : EditorComponent
             mesh.Wireframe = wireFrame;
         }
 
-        ImGui.EndDisabled();
-
         if (_context is TrileSetContext)
         {
             var collision = _meshActor.GetComponent<TrileCollisionMesh>();
