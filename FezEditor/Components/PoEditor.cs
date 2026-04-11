@@ -129,6 +129,8 @@ public class PoEditor : EditorComponent
                 sortSpecs.SpecsDirty = false;
             }
 
+            var languageFont = GetLanguageFont();
+
             for (var i = 0; i < _textTable.Count; i++)
             {
                 var row = _textTable[i];
@@ -144,11 +146,21 @@ public class PoEditor : EditorComponent
                         flags |= ImGuiSelectableFlags.Disabled;
                     }
 
+                    if (j > 0)
+                    {
+                        ImGui.PushFont(languageFont);
+                    }
+
                     if (ImGui.Selectable(row[j], false, flags))
                     {
                         _activeCell = (i, j);
                         _cellText = row[j];
                         _nextState = State.MenuPopup;
+                    }
+
+                    if (j > 0)
+                    {
+                        ImGui.PopFont();
                     }
                 }
             }
@@ -277,9 +289,12 @@ public class PoEditor : EditorComponent
         }
 
         _edit.Text = $"Editing {ColumnNames[_activeCell.Column]}...";
+        var font = GetLanguageFont();
         _edit.EditValue = () =>
         {
+            ImGui.PushFont(font);
             ImGuiX.InputTextMultiline("##edit", ref _cellText, 2048, new Vector2(-1, 240));
+            ImGui.PopFont();
             return true;
         };
 
@@ -337,6 +352,17 @@ public class PoEditor : EditorComponent
         };
 
         _nextState = State.TableView;
+    }
+
+    private ImFontPtr GetLanguageFont()
+    {
+        return _selectedLanguage switch
+        {
+            Language.Japanese => ImGuiX.Fonts.NotoSansJp,
+            Language.Korean => ImGuiX.Fonts.NotoSansKr,
+            Language.Chinese => ImGuiX.Fonts.NotoSansTc,
+            _ => ImGuiX.Fonts.NotoSans
+        };
     }
 
     private static string NormalizeLineEndings(string text)
